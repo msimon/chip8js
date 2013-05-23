@@ -268,7 +268,7 @@
                   M.gfx.(y_).(x_) <- 1 ;
               end;
 
-              if w_pos = M.sprite_width - 1 || w_pos + 1 + x >= M.gfx_width then ()
+              if w_pos = M.sprite_width - 1 then ()
               else fill_gfx_width pixel (w_pos + 1)
             in
 
