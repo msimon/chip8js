@@ -63,9 +63,6 @@
   let get_time () =
     Js.to_float ((jsnew Js.date_now ())##getTime())
 
-  let t = ref (get_time ())
-  let frequence = 1000. /. 60. (* 60 Hz *)
-
   let load_game game =
     M.initialize () ;
     lwt game_str = %load_game game in
@@ -76,6 +73,11 @@
     ) game_str;
 
     Lwt.return ()
+
+  let timer_t = ref 0.
+  let timer_late = ref 0.
+  (* decrement timer on 60hz *)
+  let frequence = 1000. /. 60.
 
   let emulate_cycle () =
     let fetch_opcode () =
@@ -89,15 +91,18 @@
       else M.pc := !M.pc + 2
     in
 
-    (* decrement timer on 60hz *)
+    (* timer_late represent the time already spent on the previous cycle *)
     let decr_timer () =
       let t' = get_time () in
-      let d = t' -. !t in
-      if d >= frequence then begin
-        t:=t';
+      let d = t' -. !timer_t +. !timer_late in
+      timer_t:=t';
+      if d < frequence then begin
+        timer_late := d ;
+      end else begin
+        timer_late := d -. frequence ;
         if !M.delay_timer > 0 then decr(M.delay_timer);
         if !M.sound_timer > 0 then decr(M.sound_timer);
-      end else ()
+      end
     in
 
     let decode opcode =
@@ -263,7 +268,7 @@
                   M.gfx.(y_).(x_) <- 1 ;
               end;
 
-              if w_pos = M.sprite_width - 1 then ()
+              if w_pos = M.sprite_width - 1 || w_pos + 1 + x >= M.gfx_width then ()
               else fill_gfx_width pixel (w_pos + 1)
             in
 
@@ -397,7 +402,9 @@
   let rate = 1000. /. 840. (* 840 instruction / sec *)
 
   let start_game_loop () =
-    let t = ref (get_time ()) in
+    let now = get_time () in
+    let t = ref now in
+    timer_t := now;
 
     (* d: we calculate the time the instruction took *)
     (* then we substract it the rate *)
@@ -443,7 +450,7 @@
           lwt _ = load_game game in
           start_game_loop ()
         with exn ->
-          Debug.log "exn: %s" (Printexc.to_string exn);
+          (* Debug.log "exn: %s" (Printexc.to_string exn); *)
           Lwt.return ()
       )
 }}
