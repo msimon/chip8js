@@ -61,7 +61,7 @@
       let leny = Array.length m in
       let lenx = Array.length m.(0) in
       let rec clear n =
-        Array.fill m.(n) 0 (lenx - 1) 0 ;
+        Array.fill m.(n) 0 lenx 0 ;
         if n = leny - 1 then ()
         else clear (n + 1)
       in
