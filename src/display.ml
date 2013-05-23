@@ -10,8 +10,6 @@
 
   module M = Mem_req
 
-  let gfx_dom = div ~a:[ a_style "width: 640px"] []
-
   let canvas = canvas ~a:[ a_style "background-color: black"; a_width (M.gfx_width * 10); a_height (M.gfx_height * 10) ] []
   let ctx = ref None
 

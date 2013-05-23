@@ -4,53 +4,42 @@
   open Html5
   open D
 
-
-  let get_time () =
-    Js.to_float ((jsnew Js.date_now ())##getTime())
-
-  let t = ref (get_time ())
-  let interval = 1. /. 840. (* 840 instruction / sec *)
-
-  let rec game_loop () =
-    Chip8.emulate_cycle ();
-
-    if Chip8.draw_flag () then
-      Display.display ();
-    Key.check ();
-
-    let t' = get_time () in
-    let d = t' -. !t in
-    t:=t';
-    if d > interval
-    then begin
-      game_loop ()
-    end else begin
-      lwt _ = Lwt_js.sleep (interval -. d) in
-      game_loop ()
-    end
-
   let init () =
+    Debug.init ();
     Display.init () ;
     Key.init () ;
 
+    let games_div = div [] in
+
     Lwt.async (
       fun _ ->
-        try_lwt
-          lwt _ = Chip8.load_game "pong1" in
-          game_loop ()
-        with exn ->
-          Firebug.console##debug(Js.string (Printf.sprintf "exn: %s\n%!" (Printexc.to_string exn)));
-          Lwt.return ()
-    ) ;
+        lwt games = %Chip8.available_game () in
+        let games =
+          List.map (
+            fun g ->
+              span ~a:[
+                a_style "cursor:pointer; margin:10px";
+                a_onclick (fun _ ->
+                  Debug.log "calling %s" g ;
+                  Chip8.launch_game g; false)
+              ] [
+                pcdata g
+              ]
+          ) games
+        in
+
+        Manip.replaceAllChild games_div games ;
+        Lwt.return_unit
+    );
 
     Manip.appendToBody (
       div ~a:[ a_class ["container"]] [
+        Debug.box_dom;
         h1 [ pcdata "CHIP8" ];
-        Display.gfx_dom ;
-        (* Chip8.hex_dom ; *)
         div [
           Display.canvas
-        ]
+        ];
+        games_div
       ]
     )
 

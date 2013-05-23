@@ -6,8 +6,13 @@
   let games = [
     "15puzzle"; "blinky"; "blitz"; "brix"; "connect4"; "guess"; "hidden"; "invaders"; "kaleid";
     "maze"; "merlin"; "missile"; "pong"; "pong2"; "puzzle"; "syzygy"; "tank"; "tetris"; "tictac" ;
-    "ufo"; "vbrix"; "vers"; "wipeoff" ; "pong1"
+    "ufo"; "vbrix"; "vers"; "wipeoff" ;
   ]
+
+  let available_game =
+    server_function Json.t<unit> (
+      fun _ -> Lwt.return games
+    )
 
   let load_game =
     server_function Json.t<string> (
@@ -15,7 +20,7 @@
         let game = String.lowercase (String.trim game) in
         if List.mem game games then begin
           let in_chan =
-            try open_in_bin ("./public/games/" ^ game)
+            try open_in_bin ("./public/games/" ^ (String.uppercase game))
             with Sys_error exn ->
               raise (Game_read_error exn)
           in
@@ -59,7 +64,7 @@
     Js.to_float ((jsnew Js.date_now ())##getTime())
 
   let t = ref (get_time ())
-  let frequence = 1. /. 60. (* 60 Hz *)
+  let frequence = 1000. /. 60. (* 60 Hz *)
 
   let load_game game =
     M.initialize () ;
@@ -382,11 +387,63 @@
 
     decr_timer ()
 
-
   let draw_flag () =
     if !draw_cnt >= 1 then begin
       draw_cnt := 0;
       true
     end else false
 
+
+  let rate = 1000. /. 840. (* 840 instruction / sec *)
+
+  let start_game_loop () =
+    let t = ref (get_time ()) in
+
+    (* d: we calculate the time the instruction took *)
+    (* then we substract it the rate *)
+    (* if it's faster than the rate we sleep for the difference *)
+    (* if it's slower then the rate we keep the difference and apply it
+       to the next instruction to try to catch up
+    *)
+
+    let rec game_loop late =
+      emulate_cycle ();
+
+      if draw_flag () then
+        Display.display ();
+
+      Key.check ();
+
+      let t' = get_time () in
+      let d = t' -. !t in
+      t:=t';
+
+      let late = rate -. d +. late in
+
+      if late < 0. then begin
+        game_loop late
+      end else begin
+        lwt _ = Lwt_js.sleep (late /. 1000.) in
+        game_loop 0.
+      end
+    in
+
+    game_loop 0.
+
+  let current_game_thread = ref None
+
+  let launch_game game =
+    let _ =
+      match !current_game_thread with
+        | Some t -> Lwt.cancel t
+        | None -> ()
+    in
+    current_game_thread := Some (
+        try_lwt
+          lwt _ = load_game game in
+          start_game_loop ()
+        with exn ->
+          Debug.log "exn: %s" (Printexc.to_string exn);
+          Lwt.return ()
+      )
 }}

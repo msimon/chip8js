@@ -1,8 +1,10 @@
 src/byte
-src/type_mli/chip8
 src/display
 src/key
-src/main_client
 src/mem_req
 
 src/type_mli/main
+src/type_mli/chip8
+src/type_mli/main_client
+
+src/debug
