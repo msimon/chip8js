@@ -13,3 +13,4 @@ _build
 *.native
 *.byte
 ocsidb
+public/chip8.js
