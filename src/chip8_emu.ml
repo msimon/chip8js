@@ -1,83 +1,12 @@
-{server{
-
-  exception Game_not_found of string
-  exception Game_read_error of string
-
-  let games = [
-    "15puzzle"; "blinky"; "blitz"; "brix"; "connect4"; "guess"; "hidden"; "invaders"; "kaleid";
-    "maze"; "merlin"; "missile"; "pong"; "pong2"; "puzzle"; "syzygy"; "tank"; "tetris"; "tictac" ;
-    "ufo"; "vbrix"; "vers"; "wipeoff" ;
-  ]
-
-  let available_game =
-    server_function Json.t<unit> (
-      fun _ -> Lwt.return games
-    )
-
-  let load_game =
-    server_function Json.t<string> (
-      fun game ->
-        let game = String.lowercase (String.trim game) in
-        if List.mem game games then begin
-          let in_chan =
-            try open_in_bin ("./public/games/" ^ (String.uppercase game))
-            with Sys_error exn ->
-              raise (Game_read_error exn)
-          in
-
-          let rec read pos s =
-            if input in_chan s pos 100 = 0 then s
-            else begin
-              let pos = String.length s in
-              let s_ = String.make (100 + pos) '\032' in
-              String.blit s 0 s_ 0 pos;
-              read pos s_
-            end
-          in
-          let s = read 0 (String.make 100 '\032') in
-          Lwt.return (String.trim s)
-        end else raise (Game_not_found game)
-    )
-}}
-
-
 {client{
-  open Eliom_content
-  open Html5
-  open D
-
-
   exception Unknow_opcode of int
   exception Empty_stack of int
 
   module M = Mem_req
+  module C = Config
 
   let draw_cnt = ref 0
-
-  let gfx_width = 64
-  let gfx_height = 32
-  let sprite_width = 8
-
   let key_wait_reset = ref false
-
-  let get_time () =
-    Js.to_float ((jsnew Js.date_now ())##getTime())
-
-  let load_game game =
-    M.initialize () ;
-    lwt game_str = %load_game game in
-
-    String.iteri (
-      fun i c ->
-        M.memory.(M.game_memory_init + i) <- int_of_char c
-    ) game_str;
-
-    Lwt.return ()
-
-  let timer_t = ref 0.
-  let timer_late = ref 0.
-  (* decrement timer on 60hz *)
-  let frequence = 1000. /. 60.
 
   let emulate_cycle () =
     let fetch_opcode () =
@@ -89,20 +18,6 @@
     let incr_pc ?(skip=false) () =
       if skip then M.pc := !M.pc + 4
       else M.pc := !M.pc + 2
-    in
-
-    (* timer_late represent the time already spent on the previous cycle *)
-    let decr_timer () =
-      let t' = get_time () in
-      let d = t' -. !timer_t +. !timer_late in
-      timer_t:=t';
-      if d < frequence then begin
-        timer_late := d ;
-      end else begin
-        timer_late := d -. frequence ;
-        if !M.delay_timer > 0 then decr(M.delay_timer);
-        if !M.sound_timer > 0 then decr(M.sound_timer);
-      end
     in
 
     let decode opcode =
@@ -257,9 +172,9 @@
           let rec fill_gfx_height h_pos =
             let rec fill_gfx_width pixel w_pos =
               (* we scan bit by bit, to check if a gfx pixel should be modify or not *)
-              if pixel land (0b1 lsl (M.sprite_width - 1 - w_pos)) > 0 then begin
-                let y_ = (y + h_pos) mod M.gfx_height in
-                let x_ = (x + w_pos) mod M.gfx_width in
+              if pixel land (0b1 lsl (C.sprite_width - 1 - w_pos)) > 0 then begin
+                let y_ = (y + h_pos) mod C.gfx_height in
+                let x_ = (x + w_pos) mod C.gfx_width in
 
                 if M.gfx.(y_).(x_) = 1 then begin
                   M.reg.(0xf) <- 1;
@@ -268,14 +183,14 @@
                   M.gfx.(y_).(x_) <- 1 ;
               end;
 
-              if w_pos = M.sprite_width - 1 then ()
+              if w_pos = C.sprite_width - 1 then ()
               else fill_gfx_width pixel (w_pos + 1)
             in
 
             let pixel = M.memory.(!M.i + h_pos) in
             fill_gfx_width pixel 0 ;
 
-            if h_pos = height - 1 || h_pos + 1 + y >= M.gfx_height then ()
+            if h_pos = height - 1 || h_pos + 1 + y >= C.gfx_height then ()
             else fill_gfx_height (h_pos + 1)
           in
 
@@ -388,9 +303,7 @@
         | _ -> raise (Unknow_opcode opcode)
     in
 
-    decode (fetch_opcode ());
-
-    decr_timer ()
+    decode (fetch_opcode ())
 
   let draw_flag () =
     if !draw_cnt >= 1 then begin
@@ -398,59 +311,4 @@
       true
     end else false
 
-
-  let rate = 1000. /. 840. (* 840 instruction / sec *)
-
-  let start_game_loop () =
-    let now = get_time () in
-    let t = ref now in
-    timer_t := now;
-
-    (* d: we calculate the time the instruction took *)
-    (* then we substract it the rate *)
-    (* if it's faster than the rate we sleep for the difference *)
-    (* if it's slower then the rate we keep the difference and apply it
-       to the next instruction to try to catch up
-    *)
-
-    let rec game_loop late =
-      emulate_cycle ();
-
-      if draw_flag () then
-        Display.display ();
-
-      Key.check ();
-
-      let t' = get_time () in
-      let d = t' -. !t in
-      t:=t';
-
-      let late = rate -. d +. late in
-
-      if late < 0. then begin
-        game_loop late
-      end else begin
-        lwt _ = Lwt_js.sleep (late /. 1000.) in
-        game_loop 0.
-      end
-    in
-
-    game_loop 0.
-
-  let current_game_thread = ref None
-
-  let launch_game game =
-    let _ =
-      match !current_game_thread with
-        | Some t -> Lwt.cancel t
-        | None -> ()
-    in
-    current_game_thread := Some (
-        try_lwt
-          lwt _ = load_game game in
-          start_game_loop ()
-        with exn ->
-          (* Debug.log "exn: %s" (Printexc.to_string exn); *)
-          Lwt.return ()
-      )
 }}

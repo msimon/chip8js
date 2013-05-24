@@ -13,7 +13,7 @@
 
     Lwt.async (
       fun _ ->
-        lwt games = %Chip8.available_game () in
+        lwt games = %Chip8_game.available_game () in
         let games =
           List.map (
             fun g ->
@@ -21,7 +21,7 @@
                 a_style "cursor:pointer; margin:10px";
                 a_onclick (fun _ ->
                   Debug.log "calling %s" g ;
-                  Chip8.launch_game g; false)
+                  Chip8_game.launch_game g; false)
               ] [
                 pcdata g
               ]

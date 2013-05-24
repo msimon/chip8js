@@ -9,8 +9,9 @@
   open Dom_html
 
   module M = Mem_req
+  module C = Config
 
-  let canvas = canvas ~a:[ a_style "background-color: black"; a_width (M.gfx_width * 10); a_height (M.gfx_height * 10) ] []
+  let canvas = canvas ~a:[ a_style "background-color: black"; a_width (C.gfx_width * 10); a_height (C.gfx_height * 10) ] []
   let ctx = ref None
 
   let init () =
@@ -29,17 +30,17 @@
         if M.gfx.(y).(x) = 1 then begin
           ctx##rect(float_of_int (x * 10), float_of_int (y * 10), 10., 10.);
         end;
-        if x >= M.gfx_width - 1 then ()
+        if x >= C.gfx_width - 1 then ()
         else draw_x (x + 1)
       in
 
       draw_x 0 ;
-      if y >= M.gfx_height - 1 then ()
+      if y >= C.gfx_height - 1 then ()
       else draw_y (y + 1)
     in
 
     ctx##beginPath();
-    ctx##clearRect(0.,0.,float_of_int (M.gfx_width * 10), float_of_int (M.gfx_height * 10));
+    ctx##clearRect(0.,0.,float_of_int (C.gfx_width * 10), float_of_int (C.gfx_height * 10));
     draw_y 0;
     ctx##fillStyle <- Js.string "yellow";
     ctx##closePath();
