@@ -1,3 +1,4 @@
-<src/server/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.server,lwt.syntax,aws,deriving-ocsigen,deriving-ocsigen.syntax)
-<src/client/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.client,eliom.syntax.client,lwt.syntax)
-<src/type_mli/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.type,lwt.syntax)
+<src/server/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.server,lwt.syntax,aws,deriving-ocsigen,deriving-ocsigen.syntax),with_lib_syntax
+<src/client/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.client,eliom.syntax.client,lwt.syntax),with_lib_syntax
+<src/type_mli/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.type,lwt.syntax),with_lib_syntax
+<syntax/*.{ml,mli}>:syntax(camlp4o),package(camlp4.quotations.r,camlp4.metagenerator,camlp4.extend)

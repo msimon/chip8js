@@ -26,15 +26,15 @@
           in
 
           let rec read pos s =
-            if input in_chan s pos 100 = 0 then s
+            if input in_chan s pos 200 = 0 then s
             else begin
               let pos = String.length s in
-              let s_ = String.make (100 + pos) '\032' in
+              let s_ = String.make (200 + pos) '\032' in
               String.blit s 0 s_ 0 pos;
               read pos s_
             end
           in
-          let s = read 0 (String.make 100 '\032') in
+          let s = read 0 (String.make 200 '\032') in
           Lwt.return (String.trim s)
         end else raise (Game_not_found game)
     )
