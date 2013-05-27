@@ -218,9 +218,10 @@ let _ =
       List.iter (
         fun t ->
           flag_and_dep [ "ocaml"; t; "with_lib_syntax"] (S [ (A "-ppopt"); P "syntax.cma"]) ;
-          (* dep [ "ocaml"; t; "with_type_mli"] (S [ A "-ppopt"; A "-type"; A "-ppopt"; P "src/type_mli/main_client.type_mli"]) *)
       ) [ "infer_interface"; "ocamldep"; "compile" ] ;
-      flag_and_dep ["camlp4o"; "compile"; "with_lib_syntax" ] (S [ (A "-ppopt"); P "syntax.cma"]) ;
+
+      flag_and_dep ["camlp4o"; "compile"; "with_lib_syntax"] (P "syntax.cma");
+
 
       flag [ "ocaml"; "infer_interface"; "thread" ] (S [ A "-thread" ]);
 
