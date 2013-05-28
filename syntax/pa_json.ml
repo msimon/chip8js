@@ -9,51 +9,125 @@ end
 
 module Make (Syntax : Sig.Camlp4Syntax) =
 struct
-  open Sig
+  open Camlp4.PreCast
   include Syntax
 
-  let helper_type_declaration = Gram.Entry.mk "helper_type_declaration"
-  let helper_label_declaration = Gram.Entry.mk "helper_label_declaration"
+  open Pa_deriving_common.Type
 
   EXTEND Gram
-
-  helper_type_declaration:
-      [
-        LEFTA
+  str_item:
         [
-            (type_name, _) = type_ident_and_parameters; "=" ;
-            "{"; labels = LIST1 helper_label_declaration SEP ";" ; "}" ->
-            (type_name, labels)
+          [ KEYWORD "type"; KEYWORD "."; "yjson"; tdl_raw = type_declaration ->
+
+            let typs_raw = Pa_deriving_common.Base.display_errors _loc Pa_deriving_common.Type.Translate.decls tdl_raw in
+
+            let modules_item =
+              List.map (
+                fun t ->
+                  let (name,params,rhs,constr,deriving_insrt) = t in
+                  match rhs with
+                    | `Fresh (exp_opt,Record fields,priv) ->
+                      let l =
+                        List.map (
+                          fun (name,(_, expr), _) ->
+                            let type_,json_type =
+                              match expr with
+                                | `Constr (["int"], []) ->
+                                  <:expr< Yjson.fetch_int $`str:name$ json >>,
+                                  <:expr< Some (Yjson.to_int obj.$lid:name$) >>
+                                | `Constr (["float"], []) ->
+                                  <:expr< Yjson.fetch_float $`str:name$ json >>,
+                                  <:expr< Some (Yjson.to_float obj.$lid:name$) >>
+                                | `Constr (["string"], []) ->
+                                  <:expr< Yjson.fetch_string $`str:name$ json >>,
+                                  <:expr< Some (Yjson.to_string obj.$lid:name$) >>
+                                | `Constr (["bool"], []) ->
+                                  <:expr< Yjson.fetch_bool $`str:name$ json >>,
+                                  <:expr< Some (Yjson.to_bool obj.$lid:name$) >>
+                                | `Constr (["option"], expr) -> begin
+                                    match expr with
+                                      | [`Constr (["int"], [])] ->
+                                        <:expr< Yjson.fetch_int_opt $lid:name$ json >>,
+                                        <:expr<
+                                          match obj.$`str:name$ with
+                                            [ Some i -> Some (Yjson.to_int i)
+                                            | None -> None ]
+                                        >>
+                                      | [`Constr (["float"], [])] ->
+                                        <:expr< Yjson.fetch_float_opt $lid:name$ json >>,
+                                        <:expr<
+                                          match obj.$`str:name$ with
+                                            [ Some f -> Some (Yjson.to_float f)
+                                            | None -> None ]
+                                        >>
+                                      | [`Constr (["string"], [])] ->
+                                        <:expr< Yjson.fetch_string_opt $lid:name$ json >>,
+                                        <:expr<
+                                          match obj.$`str:name$ with
+                                            [ Some s -> Some (Yjson.to_string s)
+                                            | None -> None ]
+                                        >>
+                                      | [`Constr (["bool"], [])] ->
+                                        <:expr< Yjson.fetch_bool_opt $lid:name$ json >>,
+                                        <:expr<
+                                          match obj.$`str:name$ with
+                                            [ Some b -> Some (Yjson.to_bool b)
+                                            | None -> None ]
+                                        >>
+                                      | _ -> assert false
+                                  end
+                                | _ -> assert false
+                            in
+
+                            let from_json =
+                              <:rec_binding<
+                                $lid:name$ = $type_$
+                              >>
+                            in
+                            let to_json =
+                              <:expr< $tup: Ast.exCom_of_list [
+                                <:expr< $`str:name$ >>;
+                                  json_type
+                              ]$>>
+                            in
+                            (from_json,to_json)
+                        ) fields
+                      in
+
+                      let to_record,to_json = List.split l in
+
+                      <:str_item<
+                        module $uid:("Json_" ^ name ^ "s")$ =
+                        struct
+                          value of_file file_name =
+                            let json = Yjson.from_file file_name in
+                            do {{
+                              $list:to_record$
+                            }};
+
+                           value to_file obj file_name =
+                             let json = Yjson.to_json_opt
+                               $List.fold_left (
+                                   fun acc j ->
+                                     <:expr<[ $j$::$acc$ ]>>
+                                 ) (<:expr< [] >>) to_json$
+                             in
+                             do { Yjson.to_file json file_name };
+
+                        end
+                      >>
+
+                    | _ -> assert false
+              ) typs_raw
+            in
+
+            let module Help = Pa_deriving_common.Base.AstHelpers (struct let _loc = _loc end) in
+            let tdl = List.map Help.Untranslate.decl typs_raw in
+
+            Ast.stSem_of_list ((<:str_item< type $list:tdl$>>)::modules_item)
           ]
-      ];
+        ];
 
-    helper_label_declaration:
-      [[
-        label = a_LIDENT; KEYWORD ":" ; t = ctyp ->
-        (label,t)
-      ]];
-
-
-    str_item: FIRST
-        [
-          [ KEYWORD "type"; KEYWORD "."; "json";  (type_name,labels) = helper_type_declaration ->
-            let tdl = Ast.TyDcl (_loc, type_name, [],
-                <:ctyp< { $list:List.map (fun (name, ty) -> <:ctyp< $lid:name$ : $ty$ >>) labels$ } >>, []) in
-            <:str_item@here<
-
-              type $tdl$;
-
-                module $uid:("Json_" ^ type_name ^ "s")$ =
-                struct
-                  value of_file str =
-                    Printf.printf $str:"of_file Json_" ^ type_name ^ "s -> %s\n%!"$ str;
-
-                  value to_file str =
-                    Printf.printf $str:"to_file Json_" ^ type_name ^ "s -> %s\n%!"$ str;
-                end
-            >>
-          ]
-        ] ;
   END
 end
 

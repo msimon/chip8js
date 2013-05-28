@@ -11,3 +11,4 @@ src/chip8_emu
 
 src/config
 src/debug
+src/yjson

@@ -9,6 +9,7 @@
     "ufo"; "vbrix"; "vers"; "wipeoff" ;
   ]
 
+
   let available_game =
     server_function Json.t<unit> (
       fun _ -> Lwt.return games
@@ -34,6 +35,8 @@
               read pos s_
             end
           in
+          close_in in_chan;
+
           let s = read 0 (String.make 200 '\032') in
           Lwt.return (String.trim s)
         end else raise (Game_not_found game)
