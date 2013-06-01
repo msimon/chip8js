@@ -46,7 +46,7 @@ let _ =
         Echo (init,(env ("%(name)_%(suffix)"-.-ext)))
       )
   in
-  List.iter derive_file_list [ "mlpack" ]
+  List.iter derive_file_list [ "mldylib"; "mllib"; "mlpack" ]
 
 let copy_with_header src prod =
   let dir = Filename.dirname prod in
@@ -140,10 +140,10 @@ let _ =
     (camlp4 "%.ml" (Some"%.pp.ml"));
 
   rule "mypreprocess: ml -> pp.ml.o"
-       ~dep:"%.ml"
-       ~prod:"%.pp.ml.o"
-       ~insert:`top
-       (camlp4 "%.ml" None)
+    ~dep:"%.ml"
+    ~prod:"%.pp.ml.o"
+    ~insert:`top
+    (camlp4 "%.ml" None)
 
 
 (**** JS COMPILATION ****)
@@ -217,11 +217,13 @@ let _ =
       (* add syntax and type_mli *)
       List.iter (
         fun t ->
-          flag_and_dep [ "ocaml"; t; "with_lib_syntax"] (S [ (A "-ppopt"); P "syntax.cma"]) ;
+          flag_and_dep [ "ocaml"; t; "with_lib_syntax"] (S [ (A "-ppopt"); P "utils/pa_syntax.cma"]) ;
+          flag [ "ocaml"; t; "with_lib_syntax"] (S [ (A "-I"); P "utils/lib"]) ;
+          dep [ "ocaml"; t; "with_lib_syntax"] ["utils/utils_lib.cma" ] ;
       ) [ "infer_interface"; "ocamldep"; "compile" ] ;
 
-      flag_and_dep ["camlp4o"; "compile"; "with_lib_syntax"] (P "syntax.cma");
-
+      flag_and_dep ["camlp4o"; "compile"; "with_lib_syntax"] (P "utils/pa_syntax.cma");
+      flag_and_dep ["ocaml"; "link"; "use_lib_utils" ] (P "utils/utils_lib.cma") ;
 
       flag [ "ocaml"; "infer_interface"; "thread" ] (S [ A "-thread" ]);
 

@@ -1,3 +1,2 @@
-chip8_server.cmo
-chip8_client.cmo
+chip8_server.cma
 chip8.js
