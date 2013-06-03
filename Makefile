@@ -5,5 +5,10 @@ all:
 lauch:
 	ocsigenserver -c chip8.conf
 
+sass:
+	@compass compile ./css
+	@cp ./css/css/chip8.css ./public
+
+
 clean:
 	rm -rf _build
