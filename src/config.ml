@@ -1,3 +1,26 @@
+{server{
+  exception Missing_param of string
+
+  let params = Hashtbl.create 0
+
+  let set = Hashtbl.replace params
+  let get name =
+    try
+      Hashtbl.find params name
+    with Not_found -> raise (Missing_param name)
+
+  open Simplexmlparser
+
+  let _  =
+    List.iter
+      (function
+	      | Element(k, _ , PCData (v) :: _) -> set k v
+	      | _ -> ())
+      (Eliom_config.get_config ())
+
+}}
+
+
 {client{
 
   let memory_size = 4096

@@ -28,6 +28,7 @@
     <site path="" charset="utf-8">
       <static dir="./public" />
       <eliom module="_build/chip8_server.cma">
+        <admin-password>password</admin-password>
       </eliom>
      </site>
 

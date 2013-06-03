@@ -1,15 +1,21 @@
 {server{
+
+  let session = Eliom_reference.eref ~persistent:"admin" ~scope:Eliom_common.default_session_scope false
+
   let is_connected =
     server_function Json.t<unit> (
       fun _ ->
-        (* todo check in eliom reg *)
-        Lwt.return false
+        Eliom_reference.get session
     )
 
   let sign_in =
     server_function Json.t<string> (
       fun pwd ->
-        Lwt.return true
+        if pwd = (Config.get "admin-password") then
+          lwt _ = Eliom_reference.set session true in
+          Lwt.return_true
+        else
+          Lwt.return_false
     )
 
 }}
@@ -23,9 +29,13 @@
 
   module DM = Dom_manip
 
+  let container = div ~a:[ a_class ["admin"; "container" ]] []
+
   let connected_dom =
     div ~a:[ a_class [ "admin"; "connected" ]] [
-
+      p [
+        pcdata "hello admin"
+      ]
     ]
 
   let not_connected_dom =
@@ -36,7 +46,7 @@
           Lwt.async (
             fun _ ->
               lwt logged = %sign_in pwd in
-              if logged then Manip.appendToBody connected_dom
+              if logged then Manip.replaceAllChild container [ connected_dom ]
               else ();
               Lwt.return_unit
           )
@@ -51,6 +61,8 @@
     ]
 
   let init () =
+    Manip.appendToBody container;
+
     Lwt.async (
       fun _ ->
         lwt is_connected = %is_connected () in
@@ -60,7 +72,7 @@
           else not_connected_dom
         in
 
-        Manip.appendToBody dom;
+        Manip.replaceAllChild container [ dom ];
         Lwt.return_unit
     )
 }}
