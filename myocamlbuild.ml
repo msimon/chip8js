@@ -42,11 +42,14 @@ let _ =
               else x::acc
             in
             aux acc pkg) [] l
-        in
-        Echo (init,(env ("%(name)_%(suffix)"-.-ext)))
+       in
+       (* if env ("%(name)_%(suffix)"-.-ext) = "chip8_server.mlpack" then *)
+       (*   Echo (init,(env ("%(name)_%(suffix).mllib"))) *)
+       (* else *)
+         Echo (init,(env ("%(name)_%(suffix)"-.-ext)))
       )
   in
-  List.iter derive_file_list [ "mldylib"; "mllib"; "mlpack" ]
+  List.iter derive_file_list [ "mlpack"; "mllib" ]
 
 let copy_with_header src prod =
   let dir = Filename.dirname prod in
@@ -152,7 +155,7 @@ let _ =
     ~deps:["%_client.cmo";"public/js_dummy.js"]
     ~prod:"%.js"
     (fun env _ ->
-	    Cmd (S [Sh"js_of_eliom"; P (env"%_client.cmo"); A"-jsopt";P"public/js_dummy.js"; A"-o"; P(env"%.js")])
+	    Cmd (S [Sh"js_of_eliom"; T (tags_of_pathname (env "%.js")); P (env"%_client.cmo"); A"-jsopt";P"public/js_dummy.js"; A"-o"; P(env"%.js")])
     )
 
 (* client/server compilation*)
@@ -208,24 +211,34 @@ let _ = Options.make_links := false
 
 let _ =
   dispatch begin function
+    | Before_rules ->
+      copy_rule "mlpack to mllib" "chip8_server.mlpack" "chip8_server.mllib"
     | After_rules ->
 
       copy_rule_with_header "src/%(name).ml" "src/server/%(name:<*>).ml" ;
       copy_rule_with_header "src/%(name).ml" "src/client/%(name:<*>).ml" ;
       copy_rule_with_header "src/%(name).ml" "src/type_mli/%(name:<*>).ml" ;
 
+      copy_rule_with_header "utils/lib/%(name).ml" "utils/lib/server/%(name:<*>).ml" ;
+      copy_rule_with_header "utils/lib/%(name).ml" "utils/lib/client/%(name:<*>).ml" ;
+
       (* add syntax and type_mli *)
       List.iter (
         fun t ->
           flag_and_dep [ "ocaml"; t; "with_lib_syntax"] (S [ (A "-ppopt"); P "utils/pa_syntax.cma"]) ;
-          flag [ "ocaml"; t; "with_lib_syntax"] (S [ (A "-I"); P "utils/lib"]) ;
-          dep [ "ocaml"; t; "with_lib_syntax"] ["utils/utils_lib.cma" ] ;
+          flag [ "ocaml"; t; "with_lib_utils_server" ] (S [ (A "-I"); P "utils/lib/server"]) ;
+          flag [ "ocaml"; t; "with_lib_utils_client" ] (S [ (A "-I"); P "utils/lib/client"]) ;
+
+          dep [ "ocaml"; t; "with_lib_utils_server"] [ "utils/utils_lib_server.cma" ] ;
+          dep [ "ocaml"; t; "with_lib_utils_client"] [ "utils/utils_lib_client.cma" ] ;
       ) [ "infer_interface"; "ocamldep"; "compile" ] ;
 
       flag_and_dep ["camlp4o"; "compile"; "with_lib_syntax"] (P "utils/pa_syntax.cma");
-      flag_and_dep ["ocaml"; "link"; "use_lib_utils" ] (P "utils/utils_lib.cma") ;
+      flag_and_dep ["ocaml"; "link"; "use_lib_utils" ] (P "utils/utils_lib_server.cma") ;
 
       flag [ "ocaml"; "infer_interface"; "thread" ] (S [ A "-thread" ]);
+
+      flag [ "js_compile"; "use_lib_utils_client"] (S [ A "-I"; P "utils/lib/client"; P "utils/utils_lib_client.cma"]);
 
       ()
 

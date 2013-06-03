@@ -9,7 +9,6 @@
     "ufo"; "vbrix"; "vers"; "wipeoff" ;
   ]
 
-
   let available_game =
     server_function Json.t<unit> (
       fun _ -> Lwt.return games
