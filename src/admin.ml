@@ -18,6 +18,53 @@
           Lwt.return_false
     )
 
+  let sign_out =
+    server_function Json.t<unit> (
+      fun _ ->
+        lwt _ = Eliom_reference.set session false in
+        Lwt.return_false
+    )
+
+  let fetch_games =
+    server_function Json.t<unit> (
+      fun _ ->
+        let l = Hashtbl.fold (
+            fun _ g acc ->
+              g::acc
+          ) Chip8_game.games_htbl []
+        in
+
+        Lwt.return l
+    )
+
+  let edit_game =
+    server_function Json.t<((string option) * Chip8_game.game)> (
+      fun (old_name,g) ->
+        begin match old_name with
+          | Some on ->
+            Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g;
+            if on <> g.Chip8_game.name then
+              Hashtbl.remove Chip8_game.games_htbl on
+          | None ->
+            Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g
+        end;
+        Lwt.return_unit
+    )
+
+  let delete_game =
+    server_function Json.t<string> (
+      fun name ->
+        Hashtbl.remove Chip8_game.games_htbl name;
+        Lwt.return ()
+    )
+
+  let dump =
+    server_function Json.t<unit> (
+      fun () ->
+        Chip8_game.dump_into_file ();
+        Lwt.return ()
+    )
+
 }}
 
 
@@ -29,31 +76,161 @@
 
   module DM = Dom_manip
 
-  let container = div ~a:[ a_class ["admin"; "container" ]] []
+  let container = div ~a:[ a_class ["admin"; "global_container" ]] []
 
-  let connected_dom =
-    div ~a:[ a_class [ "admin"; "connected" ]] [
-      p [
-        pcdata "hello admin"
-      ]
+  let rec connected_dom () =
+    let games_s,games_u = Dom_react.S.create [] in
+    let games_u f = games_u (f (Dom_react.S.value games_s)) in
+    let open_s,open_u = Dom_react.S.create (-1) in
+
+    let sign_out () =
+      Lwt.async (
+        fun _ ->
+          %sign_out ()
+      );
+      Manip.replaceAllChild container [ not_connected_dom () ]
+    in
+
+    let game_dom ~action n =
+      let name,path =
+        match action with
+          | `Create -> "",""
+          | `Edit g -> g.Chip8_game.name,g.Chip8_game.path
+      in
+
+      let edit_name = input ~input_type:`Text ~a:[ a_value name; a_id "game_name" ] () in
+      let edit_path = input ~input_type:`Text ~a:[ a_value path; a_id "game_path" ] () in
+
+      let edit_game () =
+        let name = DM.get_value edit_name in
+        let path = DM.get_value edit_path in
+
+        let g_ = {
+          Chip8_game.name ;
+          Chip8_game.path ;
+        } in
+
+        if List.exists (fun g -> g.Chip8_game.name = g_.Chip8_game.name) (Dom_react.S.value games_s) then (failwith "name must be unique")
+        else begin
+          games_u (fun gs -> g_::gs);
+
+          Lwt.async (
+            fun _ ->
+              let old_name =
+                match action with
+                  | `Create -> None
+                  | `Edit g -> Some g.Chip8_game.name
+              in
+
+              %edit_game (old_name,g_)
+          )
+        end
+      in
+
+      let delete_btn =
+        let delete_act g =
+          if Js.to_bool (Dom_html.window##confirm (Js.string (Printf.sprintf "Are you sure to delete %s ?" g.Chip8_game.name))) then
+            Lwt.async (fun _ -> %delete_game g.Chip8_game.name)
+        in
+
+        match action with
+          | `Edit g ->
+            button ~button_type:`Button ~a:[ a_onclick (fun _ -> delete_act g; false)] [ pcdata "Delete" ];
+          | `Create ->
+            button ~button_type:`Button ~a:[ a_style "display:none" ] [];
+      in
+
+      let d =
+        Dom_react.S.map (
+          fun o ->
+            if o = n then begin
+              div ~a:[ a_class ["game"]] [
+                h3 ~a:[ a_onclick (fun _ -> open_u (-1); false)] [
+                  pcdata (if name = "" then "Create new game" else name)
+                ];
+                div ~a:[ a_class ["edit"]] [
+                  div [
+                    label ~a:[ Raw.a_for "game_name" ] [ pcdata "name:"];
+                    edit_name
+                  ];
+                  div [
+                    label ~a:[ Raw.a_for "game_path" ] [ pcdata "path:"];
+                    edit_path
+                  ];
+                  button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game (); false)] [ pcdata "Save" ];
+                  delete_btn;
+                ]
+              ]
+            end else begin
+              div ~a:[ a_class ["game"]; a_onclick (fun _ ->  open_u n; false)] [
+                h3 [ pcdata (if name = "" then "Create new game" else name) ]
+              ]
+            end
+        ) open_s
+      in
+      R.node d
+    in
+
+    let games_dom = R.node (
+        Dom_react.S.map (
+          fun games ->
+            open_u (-1);
+            let d,_ =
+              List.fold_left (
+                fun (acc,n) g ->
+                  (game_dom ~action:(`Edit g) n::acc,n + 1)
+              ) ([ game_dom ~action:`Create 0 ],1) games
+            in
+
+            div d
+        ) games_s
+      )
+    in
+
+    Lwt.async (
+      fun _ ->
+        lwt games = %fetch_games () in
+        games_u (fun _ -> games) ;
+        Lwt.return ()
+    );
+
+    div ~a:[ a_class [ "connected" ]] [
+      header [
+        h2 [ pcdata "Hello admin !"];
+        span ~a:[ a_onclick (fun _ -> sign_out (); false)] [ pcdata "Sign out"];
+      ];
+      h1 [ pcdata "Games configuration" ];
+      games_dom ;
+      button ~button_type:`Button ~a:[ a_onclick (fun _ -> Lwt.async (fun _ -> %dump ()); false) ] [ pcdata "DUMP!" ]
     ]
 
-  let not_connected_dom =
-    let admin_password = input ~input_type:`Text () in
+  and not_connected_dom () =
+    let error_dom = p ~a:[ a_class ["error"]; a_style "display:none" ] [ pcdata "password mismatch" ] in
+    let admin_password = input ~input_type:`Password () in
+
     let sign_in () =
       match DM.get_opt_value admin_password with
         | Some pwd ->
           Lwt.async (
             fun _ ->
               lwt logged = %sign_in pwd in
-              if logged then Manip.replaceAllChild container [ connected_dom ]
-              else ();
+              if logged then Manip.replaceAllChild container [ connected_dom () ]
+              else Manip.SetCss.display error_dom "block" ;
               Lwt.return_unit
           )
-        | None -> ()
+        | None -> Manip.SetCss.display error_dom "block"
     in
 
-    div ~a:[ a_class [ "admin"; "not_connected" ]] [
+    Manip.Ev.onkeydown admin_password (
+      fun ev ->
+        let key = ev##keyCode in
+        if key = Keycode.return then sign_in ()
+        else Manip.SetCss.display error_dom "none";
+        true
+    );
+
+    div ~a:[ a_class [ "not_connected" ]] [
+      error_dom ;
       admin_password ;
       button ~button_type:`Button ~a:[ a_onclick (fun _ -> sign_in (); false)] [
         pcdata "Submit"
@@ -68,8 +245,8 @@
         lwt is_connected = %is_connected () in
 
         let dom =
-          if is_connected then connected_dom
-          else not_connected_dom
+          if is_connected then connected_dom ()
+          else not_connected_dom ()
         in
 
         Manip.replaceAllChild container [ dom ];

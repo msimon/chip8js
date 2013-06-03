@@ -61,7 +61,7 @@ module Builder(Loc : Defs.Loc) = struct
         in
 
         <:str_item<
-          value to_json t =
+          value to_json (t : $lid:tname$) =
             let json_list = $Helpers.expr_list l$ in
             Ext_json.to_json json_list
         >>
@@ -82,7 +82,7 @@ module Builder(Loc : Defs.Loc) = struct
         in
 
         <:str_item<
-          value from_json json =
+          value from_json json : $lid:tname$ =
             let json_list = Ext_json.fetch_assoc_value json in
             $Helpers.record_expr l$
         >>
@@ -172,14 +172,14 @@ struct
           let tdl = List.map Help.Untranslate.decl typs_raw in
 
           if json = "json" then begin
-            let json_ext = List.map Pa_deriving_common.Base.find ["Json_ext"] in
+            let json_ext = List.map Pa_deriving_common.Base.find ["Json_ext"; "Json"] in
 
             let modules_item =
               List.map (
                 fun t ->
                   let (name,_,_,_,_) = t in
                   <:str_item<
-                    module $uid:("Json_" ^ name)$ =
+                    module $uid:("Json_" ^ name ^ "s")$ =
                     struct
                       value of_file file_name =
                         let json = Ext_json.from_file file_name in

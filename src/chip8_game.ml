@@ -1,3 +1,12 @@
+{client{
+
+  type game = {
+    name : string ;
+    path : string ;
+  }
+
+}}
+
 {server{
 
   exception Game_not_found of string
@@ -13,6 +22,39 @@
     server_function Json.t<unit> (
       fun _ -> Lwt.return games
     )
+
+  type.json game = {
+    name : string ;
+    path : string ;
+  }
+
+  let games_htbl = Hashtbl.create 20
+
+  let dump_into_file () =
+    let l : game list =
+      Hashtbl.fold (
+        fun _ g acc ->
+          g::acc
+      ) games_htbl []
+    in
+
+    Json_games.list_to_file l (Config.get "games-conf-file")
+
+  let load_into_mem () =
+    let games =
+      try
+        Json_games.list_of_file (Config.get "games-conf-file")
+      with _ -> []
+    in
+
+    List.iter (
+      fun g ->
+        Hashtbl.add games_htbl g.name g
+    ) (games :> game list)
+
+  let _ =
+    load_into_mem ()
+
 
   let load_game =
     server_function Json.t<string> (
