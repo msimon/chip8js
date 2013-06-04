@@ -40,15 +40,18 @@
   let edit_game =
     server_function Json.t<((string option) * Chip8_game.game)> (
       fun (old_name,g) ->
-        begin match old_name with
-          | Some on ->
-            Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g;
-            if on <> g.Chip8_game.name then
-              Hashtbl.remove Chip8_game.games_htbl on
-          | None ->
-            Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g
-        end;
-        Lwt.return_unit
+        match_lwt Eliom_reference.get session with
+          | true ->
+            begin match old_name with
+              | Some on ->
+                Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g;
+                if on <> g.Chip8_game.name then
+                  Hashtbl.remove Chip8_game.games_htbl on
+              | None ->
+                Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g
+            end;
+            Lwt.return_unit
+          | false -> Lwt.return_unit
     )
 
   let delete_game =
@@ -108,6 +111,9 @@
         let g_ = {
           Chip8_game.name ;
           Chip8_game.path ;
+          Chip8_game.game_rate = None ;
+          Chip8_game.timer_rate = None ;
+          Chip8_game.game_data = None ;
         } in
 
         if List.exists (fun g -> g.Chip8_game.name = g_.Chip8_game.name) (Dom_react.S.value games_s) then (failwith "name must be unique")

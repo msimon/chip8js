@@ -3,6 +3,9 @@
   type game = {
     name : string ;
     path : string ;
+    game_rate : float option ;
+    timer_rate : float option ;
+    game_data : string option ;
   }
 
 }}
@@ -12,20 +15,12 @@
   exception Game_not_found of string
   exception Game_read_error of string
 
-  let games = [
-    "15puzzle"; "blinky"; "blitz"; "brix"; "connect4"; "guess"; "hidden"; "invaders"; "kaleid";
-    "maze"; "merlin"; "missile"; "pong"; "pong2"; "puzzle"; "syzygy"; "tank"; "tetris"; "tictac" ;
-    "ufo"; "vbrix"; "vers"; "wipeoff" ;
-  ]
-
-  let available_game =
-    server_function Json.t<unit> (
-      fun _ -> Lwt.return games
-    )
-
   type.json game = {
     name : string ;
     path : string ;
+    game_rate : float option ;
+    timer_rate : float option ;
+    game_data : string option ;
   }
 
   let games_htbl = Hashtbl.create 20
@@ -56,13 +51,24 @@
     load_into_mem ()
 
 
+  let available_game =
+    server_function Json.t<unit> (
+      fun _ ->
+        let games =
+          Hashtbl.fold (
+            fun _ g acc -> g::acc
+          ) games_htbl []
+        in
+        Lwt.return games
+    )
+
   let load_game =
     server_function Json.t<string> (
       fun game ->
-        let game = String.lowercase (String.trim game) in
-        if List.mem game games then begin
+        try
+          let g = Hashtbl.find games_htbl game in
           let in_chan =
-            try open_in_bin ("./public/games/" ^ (String.uppercase game))
+            try open_in_bin ((Config.get "game-dir") ^ g.name)
             with Sys_error exn ->
               raise (Game_read_error exn)
           in
@@ -81,7 +87,8 @@
           close_in in_chan;
 
           Lwt.return (String.trim s)
-        end else
+
+        with Not_found ->
           raise (Game_not_found game)
     )
 }}
@@ -90,13 +97,41 @@
   module M = Mem_req
   module C = Config
 
+  let games_htbl : (string, game) Hashtbl.t = Hashtbl.create 20
+
   let get_time () =
     Js.to_float ((jsnew Js.date_now ())##getTime())
 
-
   let load_game game =
     M.initialize () ;
-    lwt game_str = %load_game game in
+    lwt game_str =
+      match game.game_data with
+        | Some d -> Lwt.return d
+        | None ->
+          lwt d = %load_game game.name in
+          let game = {
+            game with
+              game_data = Some d ;
+          } in
+          Hashtbl.replace games_htbl game.name game ;
+          Lwt.return d
+    in
+
+    begin match game.timer_rate with
+      | Some t ->
+        C.timer_rate := t
+      | None ->
+        C.timer_rate := C.default_timer_rate
+    end;
+
+    begin
+      match game.game_rate with
+        | Some t ->
+          C.game_rate := t
+        | None ->
+          C.game_rate := C.default_game_rate
+    end;
+
 
     String.iteri (
       fun i c ->
@@ -123,10 +158,10 @@
       let t' = get_time () in
       let d = t' -. !timer_t +. !timer_late in
       timer_t:=t';
-      if d < Config.timer_rate then begin
+      if d < !C.timer_rate then begin
         timer_late := d ;
       end else begin
-        timer_late := d -. C.timer_rate ;
+        timer_late := d -. !C.timer_rate ;
         if !M.delay_timer > 0 then decr(M.delay_timer);
         if !M.sound_timer > 0 then decr(M.sound_timer);
       end
@@ -145,7 +180,7 @@
       let d = t' -. !t in
       t:=t';
 
-      let late = Config.game_rate -. d +. late in
+      let late = !C.game_rate -. d +. late in
 
       if late < 0. then begin
         game_loop late

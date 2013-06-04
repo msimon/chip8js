@@ -13,19 +13,28 @@
 
     Lwt.async (
       fun _ ->
-        lwt games = %Chip8_game.available_game () in
+        lwt _ =
+          if Hashtbl.length Chip8_game.games_htbl = 0 then begin
+            lwt games = %Chip8_game.available_game () in
+            List.iter (
+              fun g ->
+                Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g
+            ) games;
+            Lwt.return_unit
+          end else Lwt.return_unit
+        in
+
         let games =
-          List.map (
-            fun g ->
-              span ~a:[
-                a_style "cursor:pointer; margin:10px";
-                a_onclick (fun _ ->
-                  Debug.log "calling %s" g ;
-                  Chip8_game.launch_game g; false)
-              ] [
-                pcdata g
-              ]
-          ) games
+          Hashtbl.fold (
+            fun name g acc ->
+              (span ~a:[
+                 a_style "cursor:pointer; margin:10px";
+                 a_onclick (fun _ ->
+                   Chip8_game.launch_game g; false)
+               ] [
+                 pcdata name
+               ])::acc
+          ) Chip8_game.games_htbl []
         in
 
         Manip.replaceAllChild games_div games ;

@@ -56,8 +56,11 @@
   let gfx_height = 32
   let sprite_width = 8
 
-  let timer_rate = 1000. /. 60.
-  let game_rate = 1000. /. 840.
+  let default_timer_rate = 1000. /. 60. (* 60 hz *)
+  let default_game_rate =  1000. /. 840. (* 840 hz *)
+
+  let timer_rate = ref default_timer_rate
+  let game_rate = ref default_game_rate
 
 
 }}
