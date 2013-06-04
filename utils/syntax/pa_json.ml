@@ -224,6 +224,12 @@ struct
               <:str_item< $list:List.map (Pa_deriving_common.Base.derive_str _loc typs_raw) json_ext$>> ::
               modules_item
             )
+          end else if json = "dom" then begin
+                let dom_ext = List.map Pa_deriving_common.Base.find ["Dom_ext"] in
+                Ast.stSem_of_list [
+                  <:str_item< type $list:tdl$>>;
+                  <:str_item< $list:List.map (Pa_deriving_common.Base.derive_str _loc typs_raw) dom_ext$>>
+                ]
           end else
             <:str_item< type $list:tdl$>>
         ]

@@ -1,6 +1,10 @@
 {client{
 
-  type game = {
+  open Eliom_content
+  open Html5
+  open D
+
+  type.dom game = {
     name : string ;
     path : string ;
     game_rate : float option ;

@@ -149,20 +149,21 @@
       let d =
         Dom_react.S.map (
           fun o ->
+            let g =
+              match action with
+                | `Edit g -> Some g
+                | `Create -> None
+            in
+
             if o = n then begin
               div ~a:[ a_class ["game"]] [
                 h3 ~a:[ a_onclick (fun _ -> open_u (-1); false)] [
                   pcdata (if name = "" then "Create new game" else name)
                 ];
                 div ~a:[ a_class ["edit"]] [
-                  div [
-                    label ~a:[ Raw.a_for "game_name" ] [ pcdata "name:"];
-                    edit_name
-                  ];
-                  div [
-                    label ~a:[ Raw.a_for "game_path" ] [ pcdata "path:"];
-                    edit_path
-                  ];
+                  (let module M = Ext_dom.Dom_ext_option(Chip8_game.Dom_ext_game)
+                   in M.to_dom) g ;
+
                   button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game (); false)] [ pcdata "Save" ];
                   delete_btn;
                 ]

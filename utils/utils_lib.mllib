@@ -2,3 +2,4 @@ lib/ext_json
 
 lib/dom_manip
 lib/dom_react
+lib/ext_dom
