@@ -44,9 +44,8 @@
           | true ->
             begin match old_name with
               | Some on ->
-                Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g;
-                if on <> g.Chip8_game.name then
-                  Hashtbl.remove Chip8_game.games_htbl on
+                Hashtbl.remove Chip8_game.games_htbl on;
+                Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g
               | None ->
                 Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g
             end;
@@ -101,36 +100,36 @@
           | `Edit g -> g.Chip8_game.name,g.Chip8_game.path
       in
 
-      let edit_name = input ~input_type:`Text ~a:[ a_value name; a_id "game_name" ] () in
-      let edit_path = input ~input_type:`Text ~a:[ a_value path; a_id "game_path" ] () in
+      let edit_game g_ =
 
-      let edit_game () =
-        let name = DM.get_value edit_name in
-        let path = DM.get_value edit_path in
+        let g_ = Chip8_game.Dom_ext_game.save (Ext_dom.value g_) in
 
-        let g_ = {
-          Chip8_game.name ;
-          Chip8_game.path ;
-          Chip8_game.game_rate = None ;
-          Chip8_game.timer_rate = None ;
-          Chip8_game.game_data = None ;
-        } in
+        Debug.log "name: %s, path: %s, game_rate: %f, timer_rate: %f, game_data: %s"
+          g_.Chip8_game.name
+          g_.Chip8_game.path
+          (match g_.Chip8_game.game_rate with Some f -> f | None -> 0.)
+          (match g_.Chip8_game.timer_rate with Some f -> f | None -> 0.)
+          (match g_.Chip8_game.game_data with Some s -> s | None -> "null")
+        ;
 
-        if List.exists (fun g -> g.Chip8_game.name = g_.Chip8_game.name) (Dom_react.S.value games_s) then (failwith "name must be unique")
-        else begin
-          games_u (fun gs -> g_::gs);
+        match action with
+          | `Edit g when
+              g.Chip8_game.name <> g_.Chip8_game.name &&
+              List.exists (fun g -> g.Chip8_game.name = g_.Chip8_game.name) (Dom_react.S.value games_s)
+            -> (failwith "name must be unique")
+          | _ ->
+            games_u (fun gs -> g_::gs);
 
-          Lwt.async (
-            fun _ ->
-              let old_name =
-                match action with
-                  | `Create -> None
-                  | `Edit g -> Some g.Chip8_game.name
-              in
+            Lwt.async (
+              fun _ ->
+                let old_name =
+                  match action with
+                    | `Create -> None
+                    | `Edit g -> Some g.Chip8_game.name
+                in
 
-              %edit_game (old_name,g_)
-          )
-        end
+                %edit_game (old_name,g_)
+            )
       in
 
       let delete_btn =
@@ -155,16 +154,19 @@
                 | `Create -> None
             in
 
+            let g_dom =
+              (let module M = Ext_dom.Dom_ext_option(Chip8_game.Dom_ext_game)
+               in M.to_dom) g ;
+            in
+
             if o = n then begin
               div ~a:[ a_class ["game"]] [
                 h3 ~a:[ a_onclick (fun _ -> open_u (-1); false)] [
                   pcdata (if name = "" then "Create new game" else name)
                 ];
                 div ~a:[ a_class ["edit"]] [
-                  (let module M = Ext_dom.Dom_ext_option(Chip8_game.Dom_ext_game)
-                   in M.to_dom) g ;
-
-                  button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game (); false)] [ pcdata "Save" ];
+                  Ext_dom.node g_dom ;
+                  button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game g_dom; false)] [ pcdata "Save" ];
                   delete_btn;
                 ]
               ]
