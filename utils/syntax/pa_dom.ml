@@ -46,7 +46,9 @@ module Builder(Loc : Defs.Loc) = struct
 
     method proxy () =
       None, [
+        <:ident< to_default >>;
         <:ident< to_dom >>;
+        <:ident< save >>;
       ]
 
     method record ?eq ctxt tname params constraints (fields : Pa_deriving_common.Type.field list) =
@@ -193,9 +195,21 @@ method sum ?eq ctxt tname params constraints summands =
 method variant ctxt tname params constraints (_, tags) =
 
   let to_dom =
-    let l =
-      List.mapn ~init:1 (
-        fun t i ->
+    (*
+       We need to create binding (and not calling the function to_dom twice, once for node, once for value_) for each tys because
+       we are saving a value of type Html5.div_content_fun in Ext_dom.value_.
+       If we were directly calling the function twice, we would be unable to fetch any value, since the 'dom' display and the 'dom'
+       from which we are taking the value will differ
+    *)
+
+    let opt_default =
+      <:expr@here<
+        option (pcdata "")
+      >>
+    in
+    let _,options,mcs,bindings,nodes,dom_value =
+      List.fold_left (
+        fun (i,opts,mcs,binds,nodes,doms) t ->
           match t with
             | Type.Tag (name, []) ->
               let opt =
@@ -205,23 +219,46 @@ method variant ctxt tname params constraints (_, tags) =
                   ] (pcdata $`str:name$)
                 >>
               in
-              opt,(None,(None,None))
+              let mc =
+                <:match_case@here<
+                  `$uid:name$ ->
+                    Dom_manip.select_index sel $`int:i$
+                >>
+              in
+
+              ((i + 1),opt::opts,mc::mcs,binds,nodes,doms)
             | Type.Tag (name, tys) ->
               let ntys = List.length tys in
               let ids,tpatt,texpr = Helpers.tuple ntys in
 
-              let l = List.map (
-                  fun (ty,id) ->
+              let binds_def,bindings,lids = List.fold_left (
+                  fun (binds_def,binds,lids) (ty,id) ->
                     let lid = id ^ "_" ^ (string_of_int i) in
                     (<:binding<
-                       $lid:lid$ = $self#call_expr ctxt ty "to_default"$ ()
-                     >>,
-                     <:expr< $lid:lid$ >>)
-                ) (List.zip tys ids)
+                        $lid:lid$ = $self#call_expr ctxt ty "to_default"$ ()
+                     >>::binds_def,
+                     <:binding<
+                       $lid:lid$ =
+                        (* type t is define in to_dom call*)
+                        match t with [
+                           `$uid:name$ $tpatt$ ->
+                              $self#call_expr ctxt ty "to_dom"$ $lid:id$
+                          | _ -> $self#call_expr ctxt ty "to_default"$ ()
+                        ]
+                     >>::binds,
+                     <:expr< $lid:lid$ >>::lids)
+                ) ([],[],[]) (List.zip tys ids)
               in
 
-              let l,lids = List.split l in
-              let bindings = Some (Ast.biAnd_of_list l) in
+              let mc =
+                <:match_case@here<
+                  `$uid:name$ _ ->
+                    Dom_manip.select_index sel $`int:i$
+                >>
+              in
+
+              let bind_def = (Ast.biAnd_of_list binds_def) in
+              let bind = (Ast.biAnd_of_list bindings) in
 
               let opt =
                 <:expr@here<
@@ -232,62 +269,31 @@ method variant ctxt tname params constraints (_, tags) =
               in
 
               let node =
-                Some
                 <:expr@here<
                   ($`str:name$, (List.map (fun d -> d.Ext_dom.node) $Helpers.expr_list lids$))
                 >>
               in
 
               let dom_value =
-                Some
                 <:expr@here<
                   ($`str:name$, `List (List.map (fun d -> d.Ext_dom.value_) $Helpers.expr_list lids$))
                 >>
               in
-              opt,(bindings,(node,dom_value))
+              ((i + 1),opt::opts,mc::mcs,(bind_def,bind)::binds,node::nodes,dom_value::doms)
             | Type.Extends _ ->
               assert false
-      ) tags
+      ) (1,[opt_default],[],[],[],[]) tags
     in
 
-    let options, node_info = List.split l in
-    let bindings,nodes = List.split node_info in
-    let nodes,dom_value = List.split nodes in
-
-    let nodes =
-      List.fold_left (
-        fun acc i ->
-          match i with
-            | None -> acc
-            | Some e -> e::acc
-      ) [] nodes
-    in
-
-    let dom_value =
-      List.fold_left (
-        fun acc i ->
-          match i with
-            | None -> acc
-            | Some e -> e::acc
-      ) [] dom_value
-    in
-
-    let bindings =
-      List.fold_left (
-        fun acc i ->
-          match i with
-            | None -> acc
-            | Some e -> e::acc
-      ) [] bindings
-    in
+    let binds_def,bindings = List.split bindings in
 
     <:str_item@here<
       value to_default () =
         let updatable_div = div [] in
-        let $Ast.biAnd_of_list bindings$ in
+        let $Ast.biAnd_of_list binds_def$ in
         let nodes_list = $Helpers.expr_list nodes$ in
 
-        let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list options$)
+        let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list (List.rev options)$)
         and on_change () =
           let sel = Lazy.force sel in
           let v = Dom_manip.get_value_select sel in
@@ -310,14 +316,12 @@ method variant ctxt tname params constraints (_, tags) =
            Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_value$);
         }};
 
-
-      (* Use t to set default value *)
       value to_dom t =
         let updatable_div = div [] in
         let $Ast.biAnd_of_list bindings$ in
         let nodes_list = $Helpers.expr_list nodes$ in
 
-        let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list options$)
+        let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list (List.rev options)$)
         and on_change () =
           let sel = Lazy.force sel in
           let v = Dom_manip.get_value_select sel in
@@ -332,7 +336,13 @@ method variant ctxt tname params constraints (_, tags) =
 
         let sel = Lazy.force sel in
 
-        do {{
+        do {
+          match t with [
+            $list:mcs$
+          ];
+          (* SelectedIndex doesn't trigger onchange... *)
+          on_change ();
+          {
            Ext_dom.node = div ~a:[ a_class ["select_element"]] [
                (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
                updatable_div ;

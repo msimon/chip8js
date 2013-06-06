@@ -20,7 +20,7 @@
   ]
 
   type ('a) dom_ext = {
-    node : ([> Html5_types.div_content_fun ] as 'a) Eliom_content.Html5.D.elt ;
+    node : 'a Eliom_content.Html5.D.elt ;
     value_ : dom_value
   }
 
@@ -29,8 +29,8 @@
 
   module type Dom_ext = sig
     type a
-    val to_default : unit -> ('a) dom_ext
-    val to_dom : a -> ('a) dom_ext
+    val to_default : unit -> ([> Html5_types.div_content_fun ] as 'a) dom_ext
+    val to_dom : a -> ([> Html5_types.div_content_fun ] as 'a) dom_ext
 
     val save : dom_value -> a
   end

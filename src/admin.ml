@@ -80,6 +80,12 @@
 
   let container = div ~a:[ a_class ["admin"; "global_container" ]] []
 
+  let _ =
+    Lwt.async_exception_hook := (
+      fun exn ->
+        Debug.log "%s" (Printexc.to_string exn)
+    )
+
   let rec connected_dom () =
     let games_s,games_u = Dom_react.S.create [] in
     let games_u f = games_u (f (Dom_react.S.value games_s)) in

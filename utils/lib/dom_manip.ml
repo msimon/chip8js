@@ -16,5 +16,6 @@
 
   let get_value_select e = Js.to_string ((Html5.To_dom.of_select e)##value)
   let set_value_select e s = (Html5.To_dom.of_select e)##value <- Js.string s
+  let select_index e i = (To_dom.of_select e)##selectedIndex <- i
 
 }}
