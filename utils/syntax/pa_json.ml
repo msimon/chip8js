@@ -144,7 +144,93 @@ module Builder(Loc : Defs.Loc) = struct
       assert false
 
     method variant ctxt tname params constraints (_, tags) =
-      assert false
+      (* assert false *)
+
+      let to_json =
+        let mcs =
+          List.map (
+            function
+              | Type.Tag (name, []) ->
+                <:match_case<
+                  `$uid:name$ ->
+                    Ext_json.to_json [ ($str:name$,`Null) ]
+                >>
+              | Type.Tag (name, tys) ->
+                let ntys = List.length tys in
+                let ids,tpatt,texpr = Helpers.tuple ntys in
+
+                let l = List.map (
+                    fun (ty,id) ->
+                      <:expr<
+                        (* $lid:id$ variable are define by the $tpatt$ below, They are normal type *)
+                        $self#call_expr ctxt ty "to_json"$ $lid:id$
+                      >>
+                  ) (List.zip tys ids)
+                in
+
+                <:match_case<
+                  `$uid:name$ $tpatt$ ->
+                    Ext_json.to_json [ ($str:name$, `List ($Helpers.expr_list l$))]
+                >>
+              | Type.Extends _ ->
+                assert false
+          ) tags
+        in
+
+        <:str_item<
+          value to_json t =
+            match t with
+              [
+                $list:mcs$
+              ]
+        >>
+      in
+
+      let from_json =
+        let mcs =
+          List.fold_left (
+            fun acc t ->
+              match t with
+                | Type.Tag (name, []) ->
+                  <:match_case<
+                    `Assoc [ ($str:name$,`Null) ] ->
+                      `$uid:name$
+                  >>::acc
+                | Type.Tag (name, tys) ->
+                  let ntys = List.length tys in
+                  let ids,tpatt,texpr = Helpers.tuple ntys in
+
+                  let l =
+                    List.map (
+                      fun (ty,id) ->
+                        (* $lid:id$ variable are define by the match case below, they are Yojson type *)
+                        <:expr< $self#call_expr ctxt ty "from_json"$ $lid:id$ >>
+                    ) (List.zip tys ids)
+                  in
+
+                  <:match_case<
+                    `Assoc [ ($`str:name$, `List ($Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$)) ] ->
+                      `$uid:name$ $Helpers.tuple_expr l$
+                  >>::acc
+                | Type.Extends _ ->
+                  assert false
+          ) [ <:match_case< _ -> raise Ext_json.Error_json >> ] tags
+        in
+
+        <:str_item<
+          value from_json json =
+            match json with
+              [
+                $list:mcs$
+              ]
+        >>
+      in
+
+      [
+        to_json ;
+        from_json ;
+      ]
+
 
   end :> Generator.generator)
 

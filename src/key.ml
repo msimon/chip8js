@@ -1,11 +1,6 @@
-{client{
+{server{
 
-  open Eliom_content.Html5.D
-  module Manip = Eliom_content.Html5.Manip
-
-  module M = Mem_req
-
-  type k = [
+  type.json key = [
     | `Key_esc | `Key_space | `Key_backspace | `Key_return
     | `Key_left | `Key_up | `Key_right | `Key_down
     | `Key_0 | `Key_1 | `Key_2 | `Key_3 | `Key_4 | `Key_5 | `Key_6 | `Key_7 | `Key_8 | `Key_9
@@ -14,7 +9,25 @@
     | `Other of int
   ]
 
-  let stack : ((k * [ `Pressed | `Released ]) list ref) = ref []
+}}
+
+{client{
+
+  open Eliom_content.Html5.D
+  module Manip = Eliom_content.Html5.Manip
+
+  type.dom key = [
+    | `Key_esc | `Key_space | `Key_backspace | `Key_return
+    | `Key_left | `Key_up | `Key_right | `Key_down
+    | `Key_0 | `Key_1 | `Key_2 | `Key_3 | `Key_4 | `Key_5 | `Key_6 | `Key_7 | `Key_8 | `Key_9
+    | `Key_a | `Key_b | `Key_c | `Key_d | `Key_e | `Key_f | `Key_g | `Key_h | `Key_i | `Key_j | `Key_k | `Key_l | `Key_m
+    | `Key_n | `Key_o | `Key_p | `Key_q | `Key_r | `Key_s | `Key_t | `Key_u | `Key_v | `Key_w | `Key_x | `Key_y | `Key_z
+    | `Other of int
+  ]
+
+  module M = Mem_req
+
+  let stack : ((key * [ `Pressed | `Released ]) list ref) = ref []
 
   let key_of_keycode =
     function
@@ -99,5 +112,9 @@
       | Some k -> handle_key k
       | _ -> ()
 
+
+  let reset () =
+    M.clear_array M.key;
+    stack := []
 
 }}

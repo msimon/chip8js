@@ -13,4 +13,8 @@
     if s = "" then None
     else Some s
 
+
+  let get_value_select e = Js.to_string ((Html5.To_dom.of_select e)##value)
+  let set_value_select e s = (Html5.To_dom.of_select e)##value <- Js.string s
+
 }}

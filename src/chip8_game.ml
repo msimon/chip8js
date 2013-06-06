@@ -10,6 +10,7 @@
     game_rate : float option ;
     timer_rate : float option ;
     game_data : string option ;
+    toto : Key.key ;
   }
 
 }}
@@ -25,6 +26,7 @@
     game_rate : float option ;
     timer_rate : float option ;
     game_data : string option ;
+    toto : Key.key ;
   }
 
   let games_htbl = Hashtbl.create 20

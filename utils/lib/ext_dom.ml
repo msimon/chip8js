@@ -14,6 +14,7 @@
 
   type dom_value = [
     | `Input of Html5_types.input Eliom_content.Html5.D.elt
+    | `Select of Html5_types.select Eliom_content.Html5.D.elt * ((string * dom_value) list)
     | `List of dom_value list
     | `Record of (string * dom_value) list
   ]

@@ -191,7 +191,209 @@ method sum ?eq ctxt tname params constraints summands =
   assert false
 
 method variant ctxt tname params constraints (_, tags) =
-  assert false
+
+  let to_dom =
+    let l =
+      List.mapn ~init:1 (
+        fun t i ->
+          match t with
+            | Type.Tag (name, []) ->
+              let opt =
+                <:expr@here<
+                  option ~a:[
+                    a_value $`str:name$
+                  ] (pcdata $`str:name$)
+                >>
+              in
+              opt,(None,(None,None))
+            | Type.Tag (name, tys) ->
+              let ntys = List.length tys in
+              let ids,tpatt,texpr = Helpers.tuple ntys in
+
+              let l = List.map (
+                  fun (ty,id) ->
+                    let lid = id ^ "_" ^ (string_of_int i) in
+                    (<:binding<
+                       $lid:lid$ = $self#call_expr ctxt ty "to_default"$ ()
+                     >>,
+                     <:expr< $lid:lid$ >>)
+                ) (List.zip tys ids)
+              in
+
+              let l,lids = List.split l in
+              let bindings = Some (Ast.biAnd_of_list l) in
+
+              let opt =
+                <:expr@here<
+                  option ~a:[
+                    a_value $`str:name$
+                  ] (pcdata $`str:name$)
+                >>
+              in
+
+              let node =
+                Some
+                <:expr@here<
+                  ($`str:name$, (List.map (fun d -> d.Ext_dom.node) $Helpers.expr_list lids$))
+                >>
+              in
+
+              let dom_value =
+                Some
+                <:expr@here<
+                  ($`str:name$, `List (List.map (fun d -> d.Ext_dom.value_) $Helpers.expr_list lids$))
+                >>
+              in
+              opt,(bindings,(node,dom_value))
+            | Type.Extends _ ->
+              assert false
+      ) tags
+    in
+
+    let options, node_info = List.split l in
+    let bindings,nodes = List.split node_info in
+    let nodes,dom_value = List.split nodes in
+
+    let nodes =
+      List.fold_left (
+        fun acc i ->
+          match i with
+            | None -> acc
+            | Some e -> e::acc
+      ) [] nodes
+    in
+
+    let dom_value =
+      List.fold_left (
+        fun acc i ->
+          match i with
+            | None -> acc
+            | Some e -> e::acc
+      ) [] dom_value
+    in
+
+    let bindings =
+      List.fold_left (
+        fun acc i ->
+          match i with
+            | None -> acc
+            | Some e -> e::acc
+      ) [] bindings
+    in
+
+    <:str_item@here<
+      value to_default () =
+        let updatable_div = div [] in
+        let $Ast.biAnd_of_list bindings$ in
+        let nodes_list = $Helpers.expr_list nodes$ in
+
+        let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list options$)
+        and on_change () =
+          let sel = Lazy.force sel in
+          let v = Dom_manip.get_value_select sel in
+
+          try
+            let l = List.assoc v nodes_list in
+            Manip.replaceAllChild updatable_div l
+          with [ Not_found ->
+            Manip.removeAllChild updatable_div
+          ]
+        in
+
+        let sel = Lazy.force sel in
+
+        do {{
+           Ext_dom.node = div ~a:[ a_class ["select_element"]] [
+               (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
+               updatable_div ;
+             ] ;
+           Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_value$);
+        }};
+
+
+      (* Use t to set default value *)
+      value to_dom t =
+        let updatable_div = div [] in
+        let $Ast.biAnd_of_list bindings$ in
+        let nodes_list = $Helpers.expr_list nodes$ in
+
+        let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list options$)
+        and on_change () =
+          let sel = Lazy.force sel in
+          let v = Dom_manip.get_value_select sel in
+
+          try
+            let l = List.assoc v nodes_list in
+            Manip.replaceAllChild updatable_div l
+          with [ Not_found ->
+            Manip.removeAllChild updatable_div
+          ]
+        in
+
+        let sel = Lazy.force sel in
+
+        do {{
+           Ext_dom.node = div ~a:[ a_class ["select_element"]] [
+               (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
+               updatable_div ;
+             ] ;
+           Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_value$);
+        }};
+
+    >>
+  in
+
+  let save =
+    let mcs =
+      List.fold_left (
+        fun acc t ->
+          match t with
+            | Type.Tag (name, []) ->
+              <:match_case@here<
+                $`str:name$ ->
+                  `$uid:name$
+              >>::acc
+            | Type.Tag (name, tys) ->
+              let ntys = List.length tys in
+              let ids,tpatt,texpr = Helpers.tuple ntys in
+
+              let l =
+                List.map (
+                  fun (ty,id) ->
+                    <:expr@here< $self#call_expr ctxt ty "save"$ $lid:id$ >>
+                ) (List.zip tys ids)
+              in
+
+              <:match_case@here<
+                $`str:name$ ->
+                  match List.assoc $`str:name$ nodes with [
+                    `List $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
+                      `$uid:name$  $Helpers.tuple_expr l$
+                    | _ -> raise Ext_dom.Wrong_dom_value
+                  ]
+              >>::acc
+            | Type.Extends _ ->
+              assert false
+      ) [ <:match_case@here< _ -> raise Ext_dom.Empty_value >> ] tags
+    in
+
+    <:str_item@here<
+      value save =
+        fun [
+         `Select (sel, nodes) ->
+           match Dom_manip.get_value_select sel with [
+             $list:mcs$
+           ]
+        | _ -> raise Ext_dom.Wrong_dom_value
+      ]
+    >>
+  in
+
+  [
+    to_dom ;
+    save ;
+  ]
+
 
 end :> Generator.generator)
 

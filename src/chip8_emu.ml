@@ -224,7 +224,7 @@
 
           if opcode_res = 0x0A then begin
             if not !key_wait_reset then begin
-              M.clear_array M.key;
+              Key.reset () ;
               key_wait_reset := true
             end else begin
               let k_len = Array.length M.key in
