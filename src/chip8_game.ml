@@ -4,18 +4,13 @@
   open Html5
   open D
 
-  type.dom emu_key = [
-    | `K0 | `K1 | `K2 | `K3 | `K4 | `K5 | `K6 | `K7
-    | `K8 | `K9 | `KA | `KB | `KC | `KD | `KE | `KF
-  ]
-
   type.dom game = {
     name : string ;
     path : string ;
     game_rate : float option ;
     timer_rate : float option ;
     game_data : string option ;
-    keys : (Key.key * emu_key) list ;
+    keys : (Config.key * Config.emu_key) list ;
   }
 
 }}
@@ -25,18 +20,13 @@
   exception Game_not_found of string
   exception Game_read_error of string
 
-  type.json emu_key = [
-    | `K0 | `K1 | `K2 | `K3 | `K4 | `K5 | `K6 | `K7
-    | `K8 | `K9 | `KA | `KB | `KC | `KD | `KE | `KF
-  ]
-
   type.json game = {
     name : string ;
     path : string ;
     game_rate : float option ;
     timer_rate : float option ;
     game_data : string option ;
-    keys : (Key.key * emu_key) list ;
+    keys : (Config.key * Config.emu_key) list ;
   }
 
   let games_htbl = Hashtbl.create 20
@@ -148,6 +138,13 @@
           C.game_rate := C.default_game_rate
     end;
 
+    begin
+      match game.keys with
+        | [] ->
+          C.keys := C.default_keys
+        | k ->
+          C.keys := k
+    end;
 
     String.iteri (
       fun i c ->

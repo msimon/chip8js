@@ -108,7 +108,7 @@ module Builder(Loc : Defs.Loc) = struct
 
         <:str_item@here<
           value save dom_ext =
-            match dom_ext.Ext_dom.value_ with
+          match dom_ext.Ext_dom.value_ with
              [ `Record value_list ->
                  $Helpers.record_expr l$
                | _ -> raise Ext_dom.Wrong_dom_value
@@ -222,14 +222,14 @@ method variant ctxt tname params constraints (_, tags) =
               let mc =
                 <:match_case@here<
                   `$uid:name$ ->
-          Dom_manip.select_index sel $`int:i$
-              >>
-    in
+                   Dom_manip.select_index sel $`int:i$
+                >>
+              in
 
-    ((i + 1),opt::opts,mc::mcs,binds,nodes,doms)
-  | Type.Tag (name, tys) ->
-    let ntys = List.length tys in
-    let ids,tpatt,texpr = Helpers.tuple ntys in
+              ((i + 1),opt::opts,mc::mcs,binds,nodes,doms)
+            | Type.Tag (name, tys) ->
+              let ntys = List.length tys in
+              let ids,tpatt,texpr = Helpers.tuple ntys in
 
               let binds_def,bindings,lids = List.fold_left (
                   fun (binds_def,binds,lids) (ty,id) ->

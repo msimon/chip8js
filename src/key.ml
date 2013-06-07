@@ -1,36 +1,7 @@
-{server{
-
-  type.json key = [
-    | `Key_esc | `Key_space | `Key_backspace | `Key_return
-    | `Key_left | `Key_up | `Key_right | `Key_down
-    | `Key_0 | `Key_1 | `Key_2 | `Key_3 | `Key_4 | `Key_5 | `Key_6 | `Key_7 | `Key_8 | `Key_9
-    | `Key_a | `Key_b | `Key_c | `Key_d | `Key_e | `Key_f | `Key_g | `Key_h | `Key_i | `Key_j | `Key_k | `Key_l | `Key_m
-    | `Key_n | `Key_o | `Key_p | `Key_q | `Key_r | `Key_s | `Key_t | `Key_u | `Key_v | `Key_w | `Key_x | `Key_y | `Key_z
-    | `Other of int
-  ]
-
-}}
-
 {client{
-
-  open Eliom_content
-  open Html5
-  open D
-
-  module Manip = Eliom_content.Html5.Manip
-
-  type.dom key = [
-    | `Key_esc | `Key_space | `Key_backspace | `Key_return
-    | `Key_left | `Key_up | `Key_right | `Key_down
-    | `Key_0 | `Key_1 | `Key_2 | `Key_3 | `Key_4 | `Key_5 | `Key_6 | `Key_7 | `Key_8 | `Key_9
-    | `Key_a | `Key_b | `Key_c | `Key_d | `Key_e | `Key_f | `Key_g | `Key_h | `Key_i | `Key_j | `Key_k | `Key_l | `Key_m
-    | `Key_n | `Key_o | `Key_p | `Key_q | `Key_r | `Key_s | `Key_t | `Key_u | `Key_v | `Key_w | `Key_x | `Key_y | `Key_z
-    | `Other of int
-  ]
-
   module M = Mem_req
 
-  let stack : ((key * [ `Pressed | `Released ]) list ref) = ref []
+  let stack : ((Config.key * [ `Pressed | `Released ]) list ref) = ref []
 
   let key_of_keycode =
     function
@@ -88,27 +59,30 @@
 
         M.key.(n) <- v
       in
+      let hex_of_key = function
+        | `K0 -> 0x0
+        | `K1 -> 0x1
+        | `K2 -> 0x2
+        | `K3 -> 0x3
+        | `K4 -> 0x4
+        | `K5 -> 0x5
+        | `K6 -> 0x6
+        | `K7 -> 0x7
+        | `K8 -> 0x8
+        | `K9 -> 0x9
+        | `KA -> 0xa
+        | `KB -> 0xb
+        | `KC -> 0xc
+        | `KD -> 0xd
+        | `KE -> 0xe
+        | `KF -> 0xf
+      in
 
-      match key with
-        | `Key_x -> set_key 0x0
-
-        | `Key_1 -> set_key 0x1
-        | `Key_2 -> set_key 0x2
-        | `Key_3 -> set_key 0x3
-        | `Key_q -> set_key 0x4
-        | `Key_w -> set_key 0x5
-        | `Key_e -> set_key 0x6
-        | `Key_a -> set_key 0x7
-        | `Key_s -> set_key 0x8
-        | `Key_d -> set_key 0x9
-        | `Key_z -> set_key 0xa
-        | `Key_c -> set_key 0xb
-
-        | `Key_4 -> set_key 0xc
-        | `Key_r -> set_key 0xd
-        | `Key_f -> set_key 0xe
-        | `Key_v -> set_key 0xf
-        | _ -> ()
+      try
+        let kv = List.assoc key !Config.keys in
+        set_key (hex_of_key kv)
+      with Not_found ->
+        ()
     in
 
     match poll () with

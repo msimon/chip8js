@@ -1,4 +1,19 @@
 {server{
+
+  type.json emu_key = [
+    | `K0 | `K1 | `K2 | `K3 | `K4 | `K5 | `K6 | `K7
+    | `K8 | `K9 | `KA | `KB | `KC | `KD | `KE | `KF
+  ]
+
+  type.json key = [
+    | `Key_esc | `Key_space | `Key_backspace | `Key_return
+    | `Key_left | `Key_up | `Key_right | `Key_down
+    | `Key_0 | `Key_1 | `Key_2 | `Key_3 | `Key_4 | `Key_5 | `Key_6 | `Key_7 | `Key_8 | `Key_9
+    | `Key_a | `Key_b | `Key_c | `Key_d | `Key_e | `Key_f | `Key_g | `Key_h | `Key_i | `Key_j | `Key_k | `Key_l | `Key_m
+    | `Key_n | `Key_o | `Key_p | `Key_q | `Key_r | `Key_s | `Key_t | `Key_u | `Key_v | `Key_w | `Key_x | `Key_y | `Key_z
+    | `Other of int
+  ]
+
   exception Missing_param of string
 
   let params = Hashtbl.create 0
@@ -20,14 +35,53 @@
 
 }}
 
-
 {client{
+
+  open Eliom_content
+  open Html5
+  open D
+
+  module Manip = Eliom_content.Html5.Manip
+
+  type.dom emu_key = [
+    | `K0 | `K1 | `K2 | `K3 | `K4 | `K5 | `K6 | `K7
+    | `K8 | `K9 | `KA | `KB | `KC | `KD | `KE | `KF
+  ]
+
+  type.dom key = [
+    | `Key_esc | `Key_space | `Key_backspace | `Key_return
+    | `Key_left | `Key_up | `Key_right | `Key_down
+    | `Key_0 | `Key_1 | `Key_2 | `Key_3 | `Key_4 | `Key_5 | `Key_6 | `Key_7 | `Key_8 | `Key_9
+    | `Key_a | `Key_b | `Key_c | `Key_d | `Key_e | `Key_f | `Key_g | `Key_h | `Key_i | `Key_j | `Key_k | `Key_l | `Key_m
+    | `Key_n | `Key_o | `Key_p | `Key_q | `Key_r | `Key_s | `Key_t | `Key_u | `Key_v | `Key_w | `Key_x | `Key_y | `Key_z
+    | `Other of int
+  ]
 
   let memory_size = 4096
 
   let register_nb = 16
-
   let key_nb = 16
+
+  let default_keys : (key * emu_key) list = [
+    `Key_x, `K0 ;
+    `Key_1, `K1 ;
+    `Key_2, `K2 ;
+    `Key_3, `K3 ;
+    `Key_q, `K4 ;
+    `Key_w, `K5 ;
+    `Key_e, `K6 ;
+    `Key_a, `K7 ;
+    `Key_s, `K8 ;
+    `Key_d, `K9 ;
+    `Key_z, `KA ;
+    `Key_c, `KB ;
+    `Key_4, `KC ;
+    `Key_r, `KD ;
+    `Key_f, `KE ;
+    `Key_v, `KF ;
+  ]
+
+  let keys = ref default_keys
 
   let game_memory_init = 0x200
 

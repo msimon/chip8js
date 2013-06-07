@@ -49,10 +49,10 @@
 
     clear_array memory ;
     clear_array reg ;
-    clear_array key ;
+    clear_array key;
     clear_screen ();
 
-    stack := [];
+    stack := [] ;
 
     delay_timer := 0 ;
     sound_timer := 0 ;

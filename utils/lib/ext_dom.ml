@@ -198,82 +198,73 @@
 
     end)
 
+
+  let display_list (type s) (module A : Dom_ext with type a = s) () =
+    let nodes = div ~a:[ a_class ["nodes"]] [] in
+    let node = div ~a:[ a_class ["dom_ext_list"]] [ nodes ] in
+
+    let v =
+      {
+        node ;
+        value_ = `List []
+      }
+    in
+
+    let add_single_node ?d () =
+      let d = match d with
+        | Some d -> A.to_dom d
+        | None -> A.to_default ()
+      in
+      v.value_ <-
+        begin match v.value_ with
+          | `List l -> `List (l @ [ d ])
+          | _ -> assert false
+        end;
+
+      let single_node = div ~a:[ a_class ["node"]] [ d.node ] in
+      let btn =
+        button ~a:[ a_onclick (fun _ ->
+                      Manip.removeChild nodes single_node;
+                      v.value_ <-
+                        begin match v.value_ with
+                          | `List l -> `List (List.filter (fun d2 -> d <> d2) l)
+                          | _ -> assert false
+                        end;
+                      false
+                    )
+                  ] ~button_type:`Button [ pcdata "deleted" ]
+      in
+      Manip.appendChild single_node btn ;
+      Manip.appendChild nodes single_node ;
+    in
+
+    let add_btn = button ~a:[ a_onclick (fun _ -> add_single_node (); false)] ~button_type:`Button [ pcdata "add" ] in
+    Manip.appendChild node add_btn ;
+
+    v,add_single_node
+
+
+
   module Dom_ext_list (A : Dom_ext) = Default(struct
       type a = A.a list
 
       let to_default () =
-        let d = A.to_default () in
-
-        let nodes =
-          div [
-            d.node
-          ]
-        in
-        let node = div ~a:[ a_class ["dom_ext_list"]] [ nodes ] in
-
-        let v =
-          {
-            node ;
-            value_ = `List [ d ]
-          }
-        in
-
-        let add_row () =
-          let d = A.to_default () in
-          v.value_ <-
-            begin match v.value_ with
-              | `List l -> `List (l @ [ d ])
-              | _ -> assert false
-            end;
-
-          Manip.appendChild nodes d.node
-        in
-        let add_btn = button ~a:[ a_onclick (fun _ -> add_row (); false)] ~button_type:`Button [ pcdata "add" ] in
-        Manip.appendChild node add_btn ;
-
+        let v,add_single_node = display_list (module A) () in
+        add_single_node () ;
         v
 
       let to_dom l =
-        let l = List.map (
-            fun el ->
-              A.to_dom el
-          ) l
-        in
-
-        let nodes =
-          div (List.map (
-              fun d -> d.node
-            ) l)
-        in
-        let node = div ~a:[ a_class ["dom_ext_list"]] [ nodes ] in
-
-        let v =
-          {
-            node ;
-            value_ = `List l
-          }
-        in
-
-        let add_row () =
-          let d = A.to_default () in
-          v.value_ <-
-            begin match v.value_ with
-              | `List l -> `List (l @ [ d ])
-              | _ -> assert false
-            end;
-
-          Manip.appendChild nodes d.node
-        in
-        let add_btn = button ~a:[ a_onclick (fun _ -> add_row (); false)] ~button_type:`Button [ pcdata "add" ] in
-        Manip.appendChild node add_btn ;
+        let v,add_single_node = display_list (module A) () in
+        List.iter (
+          fun el ->
+            add_single_node ~d:el ()
+        ) l;
 
         v
-
 
       let save d =
         match d.value_ with
           | `List l ->
-            Firebug.console##debug (Js.string (Printf.sprintf "TOTO : %d" (List.length l))) ;
             let l =
               List.fold_left (
                 fun acc e ->
@@ -288,7 +279,6 @@
 
             l
           | _ -> raise Wrong_dom_value
-
     end)
 
 
@@ -296,26 +286,19 @@
       type a = A.a array
 
       let to_default () =
-        let d = A.to_default () in
-        {
-          node = div [ d.node ] ;
-          value_ = `List [ d ]
-        }
+        let v,add_single_node = display_list (module A) () in
+        add_single_node () ;
+        v
 
       let to_dom a =
-        let l =
-          Array.fold_left (
-            fun acc el ->
-              (A.to_dom el)::acc
-          ) [] a
-        in
+        let v,add_single_node = display_list (module A) () in
 
-        let l = List.rev l in
+        Array.iter (
+          fun el ->
+            add_single_node ~d:el ()
+        ) a;
 
-        {
-          node = div (List.map (fun e -> e.node) l) ;
-          value_ = `List l ;
-        }
+        v
 
       let save d =
         match d.value_ with
