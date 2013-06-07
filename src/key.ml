@@ -13,7 +13,10 @@
 
 {client{
 
-  open Eliom_content.Html5.D
+  open Eliom_content
+  open Html5
+  open D
+
   module Manip = Eliom_content.Html5.Manip
 
   type.dom key = [

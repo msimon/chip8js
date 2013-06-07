@@ -61,14 +61,14 @@ module Builder(Loc : Defs.Loc) = struct
                 (div [
                   span [ pcdata ($`str:name$ ^ " :")];
                   v.Ext_dom.node ;
-                ], ($`str:name$, v.Ext_dom.value_))
+                ], ($`str:name$, v))
               >>,
               <:expr<
                 let v = $self#call_poly_expr ctxt ty "to_dom"$ t.$lid:name$ in
                 (div [
                   span [ pcdata ($`str:name$ ^ " :")];
                   v.Ext_dom.node ;
-                ], ($`str:name$, v.Ext_dom.value_))
+                ], ($`str:name$, v))
               >>
           ) fields
         in
@@ -108,7 +108,7 @@ module Builder(Loc : Defs.Loc) = struct
 
         <:str_item@here<
           value save dom_ext =
-            match dom_ext with
+            match dom_ext.Ext_dom.value_ with
              [ `Record value_list ->
                  $Helpers.record_expr l$
                | _ -> raise Ext_dom.Wrong_dom_value
@@ -148,7 +148,7 @@ module Builder(Loc : Defs.Loc) = struct
             let dom_list = $Helpers.expr_list to_default$ in
             do {{
               Ext_dom.node = div (List.map (fun d -> d.Ext_dom.node) dom_list) ;
-              Ext_dom.value_ = `List (List.map (fun d -> d.Ext_dom.value_) dom_list) ;
+              Ext_dom.value_ = `List dom_list ;
             }};
 
           value to_dom t =
@@ -157,7 +157,7 @@ module Builder(Loc : Defs.Loc) = struct
             let dom_list = $Helpers.expr_list to_dom$ in
             do {{
               Ext_dom.node = div (List.map (fun d -> d.Ext_dom.node) dom_list) ;
-              Ext_dom.value_ = `List (List.map (fun d -> d.Ext_dom.value_) dom_list) ;
+              Ext_dom.value_ = `List dom_list ;
             }};
         >>
       in
@@ -175,7 +175,7 @@ module Builder(Loc : Defs.Loc) = struct
 
         <:str_item@here<
           value save dom_ext =
-            match dom_ext with
+            match dom_ext.Ext_dom.value_ with
              [ `List $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
                  $Helpers.tuple_expr l$
                | _ -> raise Ext_dom.Wrong_dom_value
@@ -222,14 +222,14 @@ method variant ctxt tname params constraints (_, tags) =
               let mc =
                 <:match_case@here<
                   `$uid:name$ ->
-                    Dom_manip.select_index sel $`int:i$
-                >>
-              in
+          Dom_manip.select_index sel $`int:i$
+              >>
+    in
 
-              ((i + 1),opt::opts,mc::mcs,binds,nodes,doms)
-            | Type.Tag (name, tys) ->
-              let ntys = List.length tys in
-              let ids,tpatt,texpr = Helpers.tuple ntys in
+    ((i + 1),opt::opts,mc::mcs,binds,nodes,doms)
+  | Type.Tag (name, tys) ->
+    let ntys = List.length tys in
+    let ids,tpatt,texpr = Helpers.tuple ntys in
 
               let binds_def,bindings,lids = List.fold_left (
                   fun (binds_def,binds,lids) (ty,id) ->
@@ -276,7 +276,7 @@ method variant ctxt tname params constraints (_, tags) =
 
               let dom_value =
                 <:expr@here<
-                  ($`str:name$, `List (List.map (fun d -> d.Ext_dom.value_) $Helpers.expr_list lids$))
+                  ($`str:name$, $Helpers.expr_list lids$)
                 >>
               in
               ((i + 1),opt::opts,mc::mcs,(bind_def,bind)::binds,node::nodes,dom_value::doms)
@@ -377,7 +377,7 @@ method variant ctxt tname params constraints (_, tags) =
               <:match_case@here<
                 $`str:name$ ->
                   match List.assoc $`str:name$ nodes with [
-                    `List $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
+                    $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
                       `$uid:name$  $Helpers.tuple_expr l$
                     | _ -> raise Ext_dom.Wrong_dom_value
                   ]
@@ -388,8 +388,9 @@ method variant ctxt tname params constraints (_, tags) =
     in
 
     <:str_item@here<
-      value save =
-        fun [
+      value save d =
+        match d.Ext_dom.value_ with
+          [
          `Select (sel, nodes) ->
            match Dom_manip.get_value_select sel with [
              $list:mcs$

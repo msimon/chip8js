@@ -12,16 +12,16 @@
   open Html5
   open D
 
-  type dom_value = [
+  type 'a dom_value = [
     | `Input of Html5_types.input Eliom_content.Html5.D.elt
-    | `Select of Html5_types.select Eliom_content.Html5.D.elt * ((string * dom_value) list)
-    | `List of dom_value list
-    | `Record of (string * dom_value) list
+    | `Select of Html5_types.select Eliom_content.Html5.D.elt * ((string * 'a dom_ext list) list)
+    | `List of 'a dom_ext list
+    | `Record of (string * 'a dom_ext) list
   ]
 
-  type ('a) dom_ext = {
+  and ('a) dom_ext = {
     node : 'a Eliom_content.Html5.D.elt ;
-    value_ : dom_value
+    mutable value_ : 'a dom_value
   }
 
   let node d = d.node
@@ -29,10 +29,10 @@
 
   module type Dom_ext = sig
     type a
-    val to_default : unit -> ([> Html5_types.div_content_fun ] as 'a) dom_ext
-    val to_dom : a -> ([> Html5_types.div_content_fun ] as 'a) dom_ext
+    val to_default : unit -> [ Html5_types.div_content_fun ] dom_ext
+    val to_dom : a -> [ Html5_types.div_content_fun ] dom_ext
 
-    val save : dom_value -> a
+    val save : [ Html5_types.div_content_fun ] dom_ext -> a
   end
 
   module Default(D : Dom_ext) : Dom_ext with type a = D.a = struct
@@ -56,14 +56,15 @@
           value_ = `Input d
         }
 
-      let save = function
-        | `Input i ->
-          let v = Dom_manip.get_opt_value i in
-          begin match v with
-            | Some i -> int_of_string i
-            | None -> raise Empty_value
-          end;
-        | _ -> raise Wrong_dom_value
+      let save d =
+        match d.value_ with
+          | `Input i ->
+            let v = Dom_manip.get_opt_value i in
+            begin match v with
+              | Some i -> int_of_string i
+              | None -> raise Empty_value
+            end;
+          | _ -> raise Wrong_dom_value
 
     end)
 
@@ -85,14 +86,15 @@
           value_ = `Input d
         }
 
-      let save = function
-        | `Input i ->
-          let v = Dom_manip.get_opt_value i in
-          begin match v with
-            | Some i -> Int32.of_string i
-            | None -> raise Empty_value
-          end;
-        | _ -> raise Wrong_dom_value
+      let save d =
+        match d.value_ with
+          | `Input i ->
+            let v = Dom_manip.get_opt_value i in
+            begin match v with
+              | Some i -> Int32.of_string i
+              | None -> raise Empty_value
+            end;
+          | _ -> raise Wrong_dom_value
 
     end)
 
@@ -113,7 +115,8 @@
           value_ = `Input d
         }
 
-      let save = function
+      let save d =
+        match d.value_ with
         | `Input i ->
           let v = Dom_manip.get_opt_value i in
           begin match v with
@@ -154,7 +157,8 @@
           value_ = `Input d
         }
 
-      let save = function
+      let save d =
+        match d.value_ with
         | `Input f ->
           let v = Dom_manip.get_opt_value f in
           begin match v with
@@ -182,7 +186,8 @@
           value_ = `Input d
         }
 
-      let save = function
+      let save d =
+        match d.value_ with
         | `Input s ->
           let v = Dom_manip.get_opt_value s in
           begin match v with
@@ -198,10 +203,35 @@
 
       let to_default () =
         let d = A.to_default () in
-        {
-          node = div [ d.node ] ;
-          value_ = `List [ d.value_ ]
-        }
+
+        let nodes =
+          div [
+            d.node
+          ]
+        in
+        let node = div ~a:[ a_class ["dom_ext_list"]] [ nodes ] in
+
+        let v =
+          {
+            node ;
+            value_ = `List [ d ]
+          }
+        in
+
+        let add_row () =
+          let d = A.to_default () in
+          v.value_ <-
+            begin match v.value_ with
+              | `List l -> `List (l @ [ d ])
+              | _ -> assert false
+            end;
+
+          Manip.appendChild nodes d.node
+        in
+        let add_btn = button ~a:[ a_onclick (fun _ -> add_row (); false)] ~button_type:`Button [ pcdata "add" ] in
+        Manip.appendChild node add_btn ;
+
+        v
 
       let to_dom l =
         let l = List.map (
@@ -210,14 +240,40 @@
           ) l
         in
 
-        {
-          node = div (List.map (fun e -> e.node) l) ;
-          value_ = `List (List.map (fun e -> e.value_) l) ;
-        }
+        let nodes =
+          div (List.map (
+              fun d -> d.node
+            ) l)
+        in
+        let node = div ~a:[ a_class ["dom_ext_list"]] [ nodes ] in
 
-      let save =
-        function
+        let v =
+          {
+            node ;
+            value_ = `List l
+          }
+        in
+
+        let add_row () =
+          let d = A.to_default () in
+          v.value_ <-
+            begin match v.value_ with
+              | `List l -> `List (l @ [ d ])
+              | _ -> assert false
+            end;
+
+          Manip.appendChild nodes d.node
+        in
+        let add_btn = button ~a:[ a_onclick (fun _ -> add_row (); false)] ~button_type:`Button [ pcdata "add" ] in
+        Manip.appendChild node add_btn ;
+
+        v
+
+
+      let save d =
+        match d.value_ with
           | `List l ->
+            Firebug.console##debug (Js.string (Printf.sprintf "TOTO : %d" (List.length l))) ;
             let l =
               List.fold_left (
                 fun acc e ->
@@ -243,7 +299,7 @@
         let d = A.to_default () in
         {
           node = div [ d.node ] ;
-          value_ = `List [ d.value_ ]
+          value_ = `List [ d ]
         }
 
       let to_dom a =
@@ -258,11 +314,11 @@
 
         {
           node = div (List.map (fun e -> e.node) l) ;
-          value_ = `List (List.map (fun e -> e.value_) l) ;
+          value_ = `List l ;
         }
 
-      let save =
-        function
+      let save d =
+        match d.value_ with
           | `List l ->
             let l =
               List.fold_left (

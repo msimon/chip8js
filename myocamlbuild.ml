@@ -43,10 +43,7 @@ let _ =
             in
             aux acc pkg) [] l
        in
-       (* if env ("%(name)_%(suffix)"-.-ext) = "chip8_server.mlpack" then *)
-       (*   Echo (init,(env ("%(name)_%(suffix).mllib"))) *)
-       (* else *)
-         Echo (init,(env ("%(name)_%(suffix)"-.-ext)))
+       Echo (init,(env ("%(name)_%(suffix)"-.-ext)))
       )
   in
   List.iter derive_file_list [ "mlpack"; "mllib" ]

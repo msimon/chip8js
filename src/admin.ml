@@ -83,7 +83,7 @@
   let _ =
     Lwt.async_exception_hook := (
       fun exn ->
-        Debug.log "%s" (Printexc.to_string exn)
+        Debug.log "Error Lwt_async: %s" (Printexc.to_string exn)
     )
 
   let rec connected_dom () =
@@ -108,7 +108,7 @@
 
       let edit_game g_ =
 
-        let g_ = Chip8_game.Dom_ext_game.save (Ext_dom.value g_) in
+        let g_ = Chip8_game.Dom_ext_game.save g_ in
 
         Debug.log "name: %s, path: %s, game_rate: %f, timer_rate: %f, game_data: %s"
           g_.Chip8_game.name
@@ -156,7 +156,8 @@
           fun o ->
             let g =
               match action with
-                | `Edit g -> Some g
+                | `Edit g ->
+                  Some g
                 | `Create -> None
             in
 
@@ -205,6 +206,7 @@
     Lwt.async (
       fun _ ->
         lwt games = %fetch_games () in
+
         games_u (fun _ -> games) ;
         Lwt.return ()
     );
