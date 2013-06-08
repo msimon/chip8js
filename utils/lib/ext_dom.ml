@@ -14,7 +14,7 @@
 
   type 'a dom_value = [
     | `Input of Html5_types.input Eliom_content.Html5.D.elt
-    | `Select of Html5_types.select Eliom_content.Html5.D.elt * ((string * 'a dom_ext list) list)
+    | `Select of Html5_types.select Eliom_content.Html5.D.elt * ((string * ('a dom_ext Lazy.t) list) list)
     | `List of 'a dom_ext list
     | `Record of (string * 'a dom_ext) list
   ]

@@ -207,9 +207,9 @@ method variant ctxt tname params constraints (_, tags) =
         option (pcdata "")
       >>
     in
-    let _,options,mcs,bindings,nodes,dom_value =
+    let _,options,mcs,bindings,dom_values =
       List.fold_left (
-        fun (i,opts,mcs,binds,nodes,doms) t ->
+        fun (i,opts,mcs,binds,doms) t ->
           match t with
             | Type.Tag (name, []) ->
               let opt =
@@ -226,25 +226,26 @@ method variant ctxt tname params constraints (_, tags) =
                 >>
               in
 
-              ((i + 1),opt::opts,mc::mcs,binds,nodes,doms)
+              ((i + 1),opt::opts,mc::mcs,binds,doms)
             | Type.Tag (name, tys) ->
               let ntys = List.length tys in
               let ids,tpatt,texpr = Helpers.tuple ntys in
 
-              let binds_def,bindings,lids = List.fold_left (
+              let binds_default,bindings,lids = List.fold_left (
                   fun (binds_def,binds,lids) (ty,id) ->
                     let lid = id ^ "_" ^ (string_of_int i) in
                     (<:binding<
-                        $lid:lid$ = $self#call_expr ctxt ty "to_default"$ ()
+                        $lid:lid$ = lazy ($self#call_expr ctxt ty "to_default"$ ())
                      >>::binds_def,
                      <:binding<
                        $lid:lid$ =
                         (* type t is define in to_dom call*)
+                        lazy (
                         match t with [
                            `$uid:name$ $tpatt$ ->
                               $self#call_expr ctxt ty "to_dom"$ $lid:id$
                           | _ -> $self#call_expr ctxt ty "to_default"$ ()
-                        ]
+                        ])
                      >>::binds,
                      <:expr< $lid:lid$ >>::lids)
                 ) ([],[],[]) (List.zip tys ids)
@@ -257,7 +258,7 @@ method variant ctxt tname params constraints (_, tags) =
                 >>
               in
 
-              let bind_def = (Ast.biAnd_of_list binds_def) in
+              let bind_default = (Ast.biAnd_of_list binds_default) in
               let bind = (Ast.biAnd_of_list bindings) in
 
               let opt =
@@ -268,21 +269,21 @@ method variant ctxt tname params constraints (_, tags) =
                 >>
               in
 
-              let node =
-                <:expr@here<
-                  ($`str:name$, (List.map (fun d -> d.Ext_dom.node) $Helpers.expr_list lids$))
-                >>
-              in
+              (* let node = *)
+              (*   <:expr@here< *)
+              (*     ($`str:name$, (List.map (fun d -> d.Ext_dom.node) $Helpers.expr_list lids$)) *)
+              (*   >> *)
+              (* in *)
 
               let dom_value =
                 <:expr@here<
                   ($`str:name$, $Helpers.expr_list lids$)
                 >>
               in
-              ((i + 1),opt::opts,mc::mcs,(bind_def,bind)::binds,node::nodes,dom_value::doms)
+              ((i + 1),opt::opts,mc::mcs,(bind_default,bind)::binds,dom_value::doms)
             | Type.Extends _ ->
               assert false
-      ) (1,[opt_default],[],[],[],[]) tags
+      ) (1,[opt_default],[],[],[]) tags
     in
 
     let binds_def,bindings = List.split bindings in
@@ -291,7 +292,7 @@ method variant ctxt tname params constraints (_, tags) =
       value to_default () =
         let updatable_div = div [] in
         let $Ast.biAnd_of_list binds_def$ in
-        let nodes_list = $Helpers.expr_list nodes$ in
+        let nodes_list = $Helpers.expr_list dom_values$ in
 
         let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list (List.rev options)$)
         and on_change () =
@@ -299,7 +300,13 @@ method variant ctxt tname params constraints (_, tags) =
           let v = Dom_manip.get_value_select sel in
 
           try
-            let l = List.assoc v nodes_list in
+            let l =
+              List.map (
+                fun e ->
+                  let e = Lazy.force e in
+                  e.Ext_dom.node
+              ) (List.assoc v nodes_list)
+            in
             Manip.replaceAllChild updatable_div l
           with [ Not_found ->
             Manip.removeAllChild updatable_div
@@ -313,13 +320,13 @@ method variant ctxt tname params constraints (_, tags) =
                (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
                updatable_div ;
              ] ;
-           Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_value$);
+           Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_values$);
         }};
 
       value to_dom t =
         let updatable_div = div [] in
         let $Ast.biAnd_of_list bindings$ in
-        let nodes_list = $Helpers.expr_list nodes$ in
+        let nodes_list = $Helpers.expr_list dom_values$ in
 
         let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list (List.rev options)$)
         and on_change () =
@@ -327,7 +334,13 @@ method variant ctxt tname params constraints (_, tags) =
           let v = Dom_manip.get_value_select sel in
 
           try
-            let l = List.assoc v nodes_list in
+            let l =
+              List.map (
+                fun e ->
+                  let e = Lazy.force e in
+                  e.Ext_dom.node
+              ) (List.assoc v nodes_list)
+            in
             Manip.replaceAllChild updatable_div l
           with [ Not_found ->
             Manip.removeAllChild updatable_div
@@ -347,7 +360,7 @@ method variant ctxt tname params constraints (_, tags) =
                (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
                updatable_div ;
              ] ;
-           Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_value$);
+           Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_values$);
         }};
 
     >>
@@ -370,7 +383,7 @@ method variant ctxt tname params constraints (_, tags) =
               let l =
                 List.map (
                   fun (ty,id) ->
-                    <:expr@here< $self#call_expr ctxt ty "save"$ $lid:id$ >>
+                    <:expr@here< $self#call_expr ctxt ty "save"$ (Lazy.force $lid:id$) >>
                 ) (List.zip tys ids)
               in
 
