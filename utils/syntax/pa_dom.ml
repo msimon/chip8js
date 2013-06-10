@@ -269,12 +269,6 @@ method variant ctxt tname params constraints (_, tags) =
                 >>
               in
 
-              (* let node = *)
-              (*   <:expr@here< *)
-              (*     ($`str:name$, (List.map (fun d -> d.Ext_dom.node) $Helpers.expr_list lids$)) *)
-              (*   >> *)
-              (* in *)
-
               let dom_value =
                 <:expr@here<
                   ($`str:name$, $Helpers.expr_list lids$)
@@ -288,8 +282,8 @@ method variant ctxt tname params constraints (_, tags) =
 
     let binds_def,bindings = List.split bindings in
 
-    <:str_item@here<
-      value to_default () =
+    let to_dom binds match_select =
+      <:expr@here<
         let updatable_div = div [] in
         let $Ast.biAnd_of_list binds_def$ in
         let nodes_list = $Helpers.expr_list dom_values$ in
@@ -315,54 +309,34 @@ method variant ctxt tname params constraints (_, tags) =
 
         let sel = Lazy.force sel in
 
-        do {{
-           Ext_dom.node = div ~a:[ a_class ["select_element"]] [
-               (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
-               updatable_div ;
-             ] ;
-           Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_values$);
-        }};
+        do {
+          $match_select$;
+
+          {
+            Ext_dom.node = div ~a:[ a_class ["select_element"]] [
+                (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
+                updatable_div ;
+              ] ;
+            Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_values$);
+          }
+        }
+      >>
+    in
+
+    <:str_item@here<
+      value to_default () =
+        $to_dom binds_def (<:expr<>>)$;
 
       value to_dom t =
-        let updatable_div = div [] in
-        let $Ast.biAnd_of_list bindings$ in
-        let nodes_list = $Helpers.expr_list dom_values$ in
-
-        let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list (List.rev options)$)
-        and on_change () =
-          let sel = Lazy.force sel in
-          let v = Dom_manip.get_value_select sel in
-
-          try
-            let l =
-              List.map (
-                fun e ->
-                  let e = Lazy.force e in
-                  e.Ext_dom.node
-              ) (List.assoc v nodes_list)
-            in
-            Manip.replaceAllChild updatable_div l
-          with [ Not_found ->
-            Manip.removeAllChild updatable_div
-          ]
-        in
-
-        let sel = Lazy.force sel in
-
-        do {
-          match t with [
-            $list:mcs$
-          ];
-          (* SelectedIndex doesn't trigger onchange... *)
-          on_change ();
-          {
-           Ext_dom.node = div ~a:[ a_class ["select_element"]] [
-               (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
-               updatable_div ;
-             ] ;
-           Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_values$);
-        }};
-
+        $to_dom binds_def (
+               <:expr@here<
+                 match t with [
+                   $list:mcs$
+                 ];
+                 (* SelectedIndex doesn't trigger onchange... *)
+                 on_change ()
+               >>
+             )$;
     >>
   in
 
