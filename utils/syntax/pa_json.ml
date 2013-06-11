@@ -139,43 +139,47 @@ module Builder(Loc : Defs.Loc) = struct
         from_json
       ]
 
-
-    method sum ?eq ctxt tname params constraints summands =
-      assert false
-
-    method variant ctxt tname params constraints (_, tags) =
-      (* assert false *)
-
+    method sum_to_json: 'c. Generator.context -> ('a -> 'b -> 'c -> 'd) -> 'c list -> Camlp4.PreCast.Ast.str_item = fun ctxt mc tags ->
       let to_json =
-        let mcs =
-          List.map (
-            function
-              | Type.Tag (name, []) ->
-                <:match_case<
-                  `$uid:name$ ->
-                    Ext_json.to_json [ ($str:name$,`Null) ]
-                >>
-              | Type.Tag (name, tys) ->
-                let ntys = List.length tys in
-                let ids,tpatt,texpr = Helpers.tuple ntys in
-
-                let l = List.map (
-                    fun (ty,id) ->
-                      <:expr<
-                        (* $lid:id$ variable are define by the $tpatt$ below, They are normal type *)
-                        $self#call_expr ctxt ty "to_json"$ $lid:id$
-                      >>
-                  ) (List.zip tys ids)
-                in
-
-                <:match_case<
-                  `$uid:name$ $tpatt$ ->
-                    Ext_json.to_json [ ($str:name$, `List ($Helpers.expr_list l$))]
-                >>
-              | Type.Extends _ ->
-                assert false
-          ) tags
+        let no_expr ~is_sum name =
+          if is_sum then
+            <:match_case<
+              $uid:name$ ->
+                Ext_json.to_json [ ($str:name$,`Null) ]
+            >>
+          else
+            <:match_case<
+              `$uid:name$ ->
+                Ext_json.to_json [ ($str:name$,`Null) ]
+            >>
         in
+
+        let with_expr ~is_sum name tys =
+          let ntys = List.length tys in
+          let ids,tpatt,texpr = Helpers.tuple ntys in
+
+          let l = List.map (
+              fun (ty,id) ->
+                <:expr<
+                  (* $lid:id$ variable are define by the $tpatt$ below, They are normal type *)
+                  $self#call_expr ctxt ty "to_json"$ $lid:id$
+                >>
+            ) (List.zip tys ids)
+          in
+
+          if is_sum then
+            <:match_case<
+              $uid:name$ $tpatt$ ->
+              Ext_json.to_json [ ($str:name$, `List ($Helpers.expr_list l$))]
+            >>
+          else
+            <:match_case<
+              `$uid:name$ $tpatt$ ->
+                Ext_json.to_json [ ($str:name$, `List ($Helpers.expr_list l$))]
+            >>
+        in
+
+        let mcs = List.map (mc no_expr with_expr) tags in
 
         <:str_item<
           value to_json t =
@@ -186,45 +190,90 @@ module Builder(Loc : Defs.Loc) = struct
         >>
       in
 
+      to_json
+
+    method sum_from_json: 'c. Generator.context -> ('e -> 'f -> 'c -> 'g) -> 'c list -> Camlp4.PreCast.Ast.str_item = fun ctxt mc tags ->
       let from_json =
+        let no_expr acc ~is_sum name =
+          if is_sum then
+            <:match_case<
+              `Assoc [ ($str:name$,`Null) ] ->
+                $uid:name$
+            >>::acc
+          else
+            <:match_case<
+              `Assoc [ ($str:name$,`Null) ] ->
+                `$uid:name$
+            >>::acc
+        in
+        let with_expr acc ~is_sum name tys =
+          let ntys = List.length tys in
+          let ids,tpatt,texpr = Helpers.tuple ntys in
+
+          let l =
+            List.map (
+              fun (ty,id) ->
+                (* $lid:id$ variable are define by the match case below, they are Yojson type *)
+                <:expr< $self#call_expr ctxt ty "from_json"$ $lid:id$ >>
+            ) (List.zip tys ids)
+          in
+
+          if is_sum then
+            <:match_case<
+              `Assoc [ ($`str:name$, `List ($Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$)) ] ->
+                $uid:name$ $Helpers.tuple_expr l$
+            >>::acc
+          else
+            <:match_case<
+              `Assoc [ ($`str:name$, `List ($Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$)) ] ->
+                `$uid:name$ $Helpers.tuple_expr l$
+            >>::acc
+        in
+
         let mcs =
           List.fold_left (
             fun acc t ->
-              match t with
-                | Type.Tag (name, []) ->
-                  <:match_case<
-                    `Assoc [ ($str:name$,`Null) ] ->
-                      `$uid:name$
-                  >>::acc
-                | Type.Tag (name, tys) ->
-                  let ntys = List.length tys in
-                  let ids,tpatt,texpr = Helpers.tuple ntys in
-
-                  let l =
-                    List.map (
-                      fun (ty,id) ->
-                        (* $lid:id$ variable are define by the match case below, they are Yojson type *)
-                        <:expr< $self#call_expr ctxt ty "from_json"$ $lid:id$ >>
-                    ) (List.zip tys ids)
-                  in
-
-                  <:match_case<
-                    `Assoc [ ($`str:name$, `List ($Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$)) ] ->
-                      `$uid:name$ $Helpers.tuple_expr l$
-                  >>::acc
-                | Type.Extends _ ->
-                  assert false
+              mc (no_expr acc) (with_expr acc) t
           ) [ <:match_case< _ -> raise Ext_json.Error_json >> ] tags
         in
 
         <:str_item<
           value from_json json =
-            match json with
-              [
-                $list:mcs$
-              ]
+          match json with
+            [
+              $list:mcs$
+            ]
         >>
+     in
+
+     from_json
+
+    method sum ?eq ctxt tname params constraints summands =
+      let mc no_expr with_expr =
+        function
+          | (name, []) -> no_expr ~is_sum:true name
+          | (name,tys) -> with_expr ~is_sum:true name tys
       in
+
+      let to_json = self#sum_to_json ctxt mc summands in
+      let from_json = self#sum_from_json ctxt mc summands in
+
+      [
+        to_json ;
+        from_json ;
+      ]
+
+
+    method variant ctxt tname params constraints (_, tags) =
+      let mc no_expr with_expr =
+        function
+          | Type.Tag (name, []) -> no_expr ~is_sum:false name
+          | Type.Tag (name,tys) -> with_expr ~is_sum:false name tys
+          | Type.Extends _ -> assert false
+      in
+
+      let to_json = self#sum_to_json ctxt mc tags in
+      let from_json = self#sum_from_json ctxt mc tags in
 
       [
         to_json ;
