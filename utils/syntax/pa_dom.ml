@@ -354,6 +354,66 @@ module Builder(Loc : Defs.Loc) = struct
         to_dom
 
 
+method save_of_sum : 'c. Generator.context -> ('e -> 'f -> 'c -> 'h) -> 'c list -> Camlp4.PreCast.Ast.str_item = fun ctxt mc tags ->
+  let save =
+    let no_expr acc ~is_sum name =
+      if is_sum then
+        <:match_case@here<
+          $`str:name$ ->
+            $uid:name$
+        >>::acc
+      else
+        <:match_case@here<
+          $`str:name$ ->
+            `$uid:name$
+         >>::acc
+    in
+
+    let with_expr acc ~is_sum name tys =
+      let ntys = List.length tys in
+      let ids,tpatt,texpr = Helpers.tuple ntys in
+
+      let l =
+        List.map (
+          fun (ty,id) ->
+            <:expr@here< $self#call_expr ctxt ty "save"$ (Lazy.force $lid:id$) >>
+        ) (List.zip tys ids)
+      in
+
+      <:match_case@here<
+        $`str:name$ ->
+          match List.assoc $`str:name$ nodes with [
+            $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
+              `$uid:name$  $Helpers.tuple_expr l$
+            | _ -> raise Ext_dom.Wrong_dom_value
+          ]
+      >>::acc
+    in
+
+    let mcs =
+      List.fold_left (
+        fun acc t ->
+          mc (no_expr acc) (with_expr acc) t
+      ) [ <:match_case@here< _ -> raise Ext_dom.Empty_value >> ] tags
+    in
+
+    <:str_item@here<
+      value save d =
+      match d.Ext_dom.value_ with
+        [
+         `Select (sel, nodes) ->
+            match Dom_manip.get_value_select sel with [
+              $list:mcs$
+            ]
+            | _ -> raise Ext_dom.Wrong_dom_value
+        ]
+     >>
+  in
+
+  save
+
+
+
 method sum ?eq ctxt tname params constraints summands =
   let mc no_expr with_expr =
     function
@@ -362,13 +422,7 @@ method sum ?eq ctxt tname params constraints summands =
   in
 
   let to_dom = self#sum_to_dom ctxt mc summands in
-
-  let save =
-    <:str_item@here<
-    value save d =
-      failwith "not_implemented"
-    >>
-  in
+  let save = self#save_of_sum ctxt mc summands in
 
   [
     to_dom ;
@@ -386,53 +440,7 @@ method variant ctxt tname params constraints (_, tags) =
   in
 
   let to_dom = self#sum_to_dom ctxt mc tags in
-
-  let save =
-    let mcs =
-      List.fold_left (
-        fun acc t ->
-          match t with
-            | Type.Tag (name, []) ->
-              <:match_case@here<
-                $`str:name$ ->
-                  `$uid:name$
-              >>::acc
-            | Type.Tag (name, tys) ->
-              let ntys = List.length tys in
-              let ids,tpatt,texpr = Helpers.tuple ntys in
-
-              let l =
-                List.map (
-                  fun (ty,id) ->
-                    <:expr@here< $self#call_expr ctxt ty "save"$ (Lazy.force $lid:id$) >>
-                ) (List.zip tys ids)
-              in
-
-              <:match_case@here<
-                $`str:name$ ->
-                  match List.assoc $`str:name$ nodes with [
-                    $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
-                      `$uid:name$  $Helpers.tuple_expr l$
-                    | _ -> raise Ext_dom.Wrong_dom_value
-                  ]
-              >>::acc
-            | Type.Extends _ ->
-              assert false
-      ) [ <:match_case@here< _ -> raise Ext_dom.Empty_value >> ] tags
-    in
-
-    <:str_item@here<
-      value save d =
-        match d.Ext_dom.value_ with
-        [
-         `Select (sel, nodes) ->
-            match Dom_manip.get_value_select sel with [
-              $list:mcs$
-            ]
-          | _ -> raise Ext_dom.Wrong_dom_value
-        ]
-    >>
-  in
+  let save = self#save_of_sum ctxt mc tags in
 
   [
     to_dom ;
