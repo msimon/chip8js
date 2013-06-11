@@ -203,7 +203,7 @@ module Builder(Loc : Defs.Loc) = struct
            if is_sum then
              <:match_case@here<
                $uid:name$ ->
-                Dom_manip.select_index sel $`int:i$
+                 Dom_manip.select_index sel $`int:i$
              >>
            else
            <:match_case@here<
@@ -225,16 +225,29 @@ module Builder(Loc : Defs.Loc) = struct
                (<:binding<
                    $lid:lid$ = lazy ($self#call_expr ctxt ty "to_default"$ ())
                 >>::binds_def,
-                <:binding<
-                  $lid:lid$ =
-                   (* type t is define in to_dom call*)
-                   lazy (
-                   match t with [
-                      `$uid:name$ $tpatt$ ->
-                         $self#call_expr ctxt ty "to_dom"$ $lid:id$
-                  | _ -> $self#call_expr ctxt ty "to_default"$ ()
-                  ])
-                >>::binds,
+                (if is_sum then
+                    <:binding<
+                      $lid:lid$ =
+                      (* type t is define in to_dom call*)
+                      lazy (
+                        match t with [
+                          $uid:name$ $tpatt$ ->
+                            $self#call_expr ctxt ty "to_dom"$ $lid:id$
+                        | _ -> $self#call_expr ctxt ty "to_default"$ ()
+                      ])
+                    >>
+                  else
+                    <:binding<
+                      $lid:lid$ =
+                       (* type t is define in to_dom call*)
+                       lazy (
+                       match t with [
+                          `$uid:name$ $tpatt$ ->
+                             $self#call_expr ctxt ty "to_dom"$ $lid:id$
+                      | _ -> $self#call_expr ctxt ty "to_default"$ ()
+                      ])
+                    >>
+                )::binds,
                 <:expr< $lid:lid$ >>::lids)
            ) ([],[],[]) (List.zip tys ids)
          in
@@ -243,7 +256,7 @@ module Builder(Loc : Defs.Loc) = struct
            if is_sum then
              <:match_case@here<
                $uid:name$ _ ->
-               Dom_manip.select_index sel $`int:i$
+                 Dom_manip.select_index sel $`int:i$
               >>
            else
              <:match_case@here<
@@ -291,12 +304,10 @@ module Builder(Loc : Defs.Loc) = struct
            ) (1,[opt_default],[],[],[]) tags
          in
 
-         let binds_def,bindings = List.split bindings in
-
          let to_dom binds match_select =
            <:expr@here<
              let updatable_div = div [] in
-             let $Ast.biAnd_of_list binds_def$ in
+             let $Ast.biAnd_of_list binds$ in
              let nodes_list = $Helpers.expr_list dom_values$ in
 
              let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list (List.rev options)$)
@@ -334,12 +345,14 @@ module Builder(Loc : Defs.Loc) = struct
                >>
           in
 
+          let binds_def,bindings = List.split bindings in
+
           <:str_item@here<
             value to_default () =
              $to_dom binds_def (<:expr<>>)$;
 
             value to_dom t =
-              $to_dom binds_def (
+              $to_dom bindings (
                 <:expr@here<
                   match t with [
                     $list:mcs$
@@ -354,7 +367,7 @@ module Builder(Loc : Defs.Loc) = struct
         to_dom
 
 
-method save_of_sum : 'c. Generator.context -> ('e -> 'f -> 'c -> 'h) -> 'c list -> Camlp4.PreCast.Ast.str_item = fun ctxt mc tags ->
+method save_of_sum : 'c. Generator.context -> ('e -> 'f -> 'c -> 'g) -> 'c list -> Camlp4.PreCast.Ast.str_item = fun ctxt mc tags ->
   let save =
     let no_expr acc ~is_sum name =
       if is_sum then
@@ -380,14 +393,24 @@ method save_of_sum : 'c. Generator.context -> ('e -> 'f -> 'c -> 'h) -> 'c list 
         ) (List.zip tys ids)
       in
 
-      <:match_case@here<
-        $`str:name$ ->
+      if is_sum then
+        <:match_case@here<
+          $`str:name$ ->
           match List.assoc $`str:name$ nodes with [
             $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
-              `$uid:name$  $Helpers.tuple_expr l$
+              $uid:name$  $Helpers.tuple_expr l$
             | _ -> raise Ext_dom.Wrong_dom_value
           ]
-      >>::acc
+        >>::acc
+      else
+        <:match_case@here<
+          $`str:name$ ->
+            match List.assoc $`str:name$ nodes with [
+              $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
+                `$uid:name$  $Helpers.tuple_expr l$
+              | _ -> raise Ext_dom.Wrong_dom_value
+          ]
+        >>::acc
     in
 
     let mcs =
