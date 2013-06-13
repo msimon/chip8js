@@ -77,18 +77,20 @@ module Builder(Loc : Defs.Loc) = struct
         let to_default, to_dom = List.split l in
 
         <:str_item<
-          value to_default () =
+          value to_default ?v () =
             let dom_list = $Helpers.expr_list to_default$ in
             do {{
-              Ext_dom.node = div ~a:[ a_class [$`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
+              Ext_dom.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
               Ext_dom.value_ = `Record (List.map (fun (_,v) -> v) dom_list);
+              Ext_dom.error = None ;
             }};
 
           value to_dom t =
             let dom_list = $Helpers.expr_list to_dom$ in
             do {{
-              Ext_dom.node = div ~a:[ a_class [$`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
+              Ext_dom.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
               Ext_dom.value_ = `Record (List.map (fun (_,v) -> v) dom_list);
+              Ext_dom.error = None ;
             }};
         >>
       in
@@ -144,12 +146,13 @@ module Builder(Loc : Defs.Loc) = struct
         let to_default, to_dom = List.split l in
 
         <:str_item@here<
-          value to_default () =
+          value to_default ?v () =
             (* $tpatt$ will be something like (id1,id2,id3...), so here id are value name of a subset of t*)
             let dom_list = $Helpers.expr_list to_default$ in
             do {{
-              Ext_dom.node = div (List.map (fun d -> d.Ext_dom.node) dom_list) ;
+              Ext_dom.node = div ~a:[a_class [ "dom_ext_tuple" ]] (List.map (fun d -> d.Ext_dom.node) dom_list) ;
               Ext_dom.value_ = `List dom_list ;
+              Ext_dom.error = None ;
             }};
 
           value to_dom t =
@@ -157,8 +160,9 @@ module Builder(Loc : Defs.Loc) = struct
             let $tpatt$ = t in
             let dom_list = $Helpers.expr_list to_dom$ in
             do {{
-              Ext_dom.node = div (List.map (fun d -> d.Ext_dom.node) dom_list) ;
+              Ext_dom.node = div ~a:[ a_class ["dom_ext_tuple"]] (List.map (fun d -> d.Ext_dom.node) dom_list) ;
               Ext_dom.value_ = `List dom_list ;
+              Ext_dom.error = None ;
             }};
         >>
       in
@@ -335,11 +339,12 @@ module Builder(Loc : Defs.Loc) = struct
                $match_select$;
 
                {
-                 Ext_dom.node = div ~a:[ a_class ["select_element"]] [
+                 Ext_dom.node = div ~a:[ a_class ["dom_ext_sum"]] [
                      (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
                      updatable_div ;
                    ] ;
                  Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_values$);
+                 Ext_dom.error = None ;
                }
              }
                >>
@@ -348,7 +353,7 @@ module Builder(Loc : Defs.Loc) = struct
           let binds_def,bindings = List.split bindings in
 
           <:str_item@here<
-            value to_default () =
+            value to_default ?v () =
              $to_dom binds_def (<:expr<>>)$;
 
             value to_dom t =
