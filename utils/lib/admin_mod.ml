@@ -28,7 +28,7 @@
   let node d = d.node
   let value d = d.value_
 
-  module type Dom_ext = sig
+  module type Admin_mod = sig
     type a
     val to_default : ?v:a -> unit -> [ Html5_types.div_content_fun ] dom_ext
     val to_dom : a -> [ Html5_types.div_content_fun ] dom_ext
@@ -36,7 +36,7 @@
     val save : [ Html5_types.div_content_fun ] dom_ext -> a
   end
 
-  module Default(D : Dom_ext) : Dom_ext with type a = D.a = struct
+  module Default(D : Admin_mod) : Admin_mod with type a = D.a = struct
     include D
   end
 
@@ -53,7 +53,7 @@
       end;
       raise exn
 
-  module Dom_ext_int = Default(struct
+  module Admin_mod_int = Default(struct
       type a = int
 
       let to_default ?v () =
@@ -90,7 +90,7 @@
     end)
 
 
-  module Dom_ext_int32 = Default(struct
+  module Admin_mod_int32 = Default(struct
       type a = int32
 
       let to_default ?v () =
@@ -126,7 +126,7 @@
 
     end)
 
-  module Dom_ext_int64 = Default(struct
+  module Admin_mod_int64 = Default(struct
       type a = int64
 
       let to_default ?v () =
@@ -162,7 +162,7 @@
 
     end)
 
-  module Dom_ext_bool = Default(struct
+  module Admin_mod_bool = Default(struct
       type a = bool
 
       let to_default ?v () =
@@ -198,12 +198,12 @@
               match Dom_manip.get_value_select sel with
                 | "true" -> true
                 | "false" -> false
-                | v -> raise Empty_value
+                | _ -> raise Empty_value
             end
           | _ -> raise Wrong_dom_value
     end)
 
-  module Dom_ext_float = Default(struct
+  module Admin_mod_float = Default(struct
       type a = float
 
       let to_default ?v () =
@@ -239,7 +239,7 @@
 
     end)
 
-  module Dom_ext_string = Default(struct
+  module Admin_mod_string = Default(struct
       type a = string
 
       let to_default ?v () =
@@ -275,7 +275,7 @@
     end)
 
 
-  let display_list (type s) (module A : Dom_ext with type a = s) () =
+  let display_list (type s) (module A : Admin_mod with type a = s) () =
     let nodes = div ~a:[ a_class ["dom_ext_list_elems"]] [] in
     let node = div ~a:[ a_class ["dom_ext_list"]] [ nodes ] in
 
@@ -322,7 +322,7 @@
 
 
 
-  module Dom_ext_list (A : Dom_ext) = Default(struct
+  module Admin_mod_list (A : Admin_mod) = Default(struct
       type a = A.a list
 
       let to_default ?v () =
@@ -354,7 +354,7 @@
     end)
 
 
-  module Dom_ext_array (A : Dom_ext) = Default(struct
+  module Admin_mod_array (A : Admin_mod) = Default(struct
       type a = A.a array
 
       let to_default ?v () =
@@ -391,7 +391,7 @@
     end)
 
 
-  module Dom_ext_option (A : Dom_ext) = Default(struct
+  module Admin_mod_option (A : Admin_mod) = Default(struct
       type a = A.a option
 
       let to_default ?v () =

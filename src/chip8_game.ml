@@ -4,14 +4,14 @@
   open Html5
   open D
 
-  type.dom game = {
+  type game = {
     name : string ;
     path : string ;
     game_rate : float option ;
     timer_rate : float option ;
     game_data : string option ;
     keys : (Config.key * Config.emu_key) list ;
-  }
+  } deriving (Admin_mod)
 
 }}
 
@@ -20,14 +20,14 @@
   exception Game_not_found of string
   exception Game_read_error of string
 
-  type.json game = {
+  type game = {
     name : string ;
     path : string ;
     game_rate : float option ;
     timer_rate : float option ;
     game_data : string option ;
     keys : (Config.key * Config.emu_key) list ;
-  }
+  } deriving (Json, Json_ext)
 
   let games_htbl = Hashtbl.create 20
 
@@ -39,12 +39,12 @@
       ) games_htbl []
     in
 
-    Json_games.list_to_file l (Config.get "games-conf-file")
+    Json_utils_game.list_to_file l (Config.get "games-conf-file")
 
   let load_into_mem () =
     let games =
       try
-        Json_games.list_of_file (Config.get "games-conf-file")
+        Json_utils_game.list_of_file (Config.get "games-conf-file")
       with _ -> []
     in
 

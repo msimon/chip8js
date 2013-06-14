@@ -108,7 +108,7 @@
 
       let edit_game g_ =
 
-        let g_ = Chip8_game.Dom_ext_game.save g_ in
+        let g_ = Chip8_game.Admin_mod_game.save g_ in
 
         Debug.log "name: %s, path: %s, game_rate: %f, timer_rate: %f, game_data: %s"
           g_.Chip8_game.name
@@ -162,7 +162,7 @@
             in
 
             let g_dom =
-              (let module M = Ext_dom.Dom_ext_option(Chip8_game.Dom_ext_game)
+              (let module M = Ext_dom.Admin_mod_option(Chip8_game.Admin_mod_game)
                in M.to_dom) g ;
             in
 

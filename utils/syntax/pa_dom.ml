@@ -9,7 +9,7 @@ struct
 end
 
 module Description : Defs.ClassDescription = struct
-  let classname = "Dom_ext"
+  let classname = "Admin_mod"
   let runtimename = "Ext_dom"
   let default_module = None
   let alpha = None
@@ -479,8 +479,28 @@ method variant ctxt tname params constraints (_, tags) =
 end :> Generator.generator)
 
 let generate = Generator.generate generator
+  (* let str_item1 = Generator.generate generator decls in *)
+
+  (* let names = List.map ( *)
+  (*   fun (name,_,_,_,_) -> *)
+  (*     <:str_item< *)
+  (*       module $uid:(name ^ "_toto")$ = *)
+  (*       struct *)
+  (*       type a = int; *)
+  (*       value of_string = "str"; *)
+  (*       end *)
+  (*     >> *)
+  (* ) decls in *)
+
+
+  (* <:str_item< *)
+  (*   $str_item1; *)
+  (*   $list:names$ *)
+  (* >> *)
+
+
 let generate_sigs = Generator.generate_sigs generator
 
 end
 
-module Dom_ext = Base.Register(Description)(Builder)
+module Admin_mod = Base.Register(Description)(Builder)

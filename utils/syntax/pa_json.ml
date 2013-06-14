@@ -283,94 +283,53 @@ module Builder(Loc : Defs.Loc) = struct
 
   end :> Generator.generator)
 
-  let generate = Generator.generate generator
+  let generate decls =
+    let i = Generator.generate generator decls in
+
+    let modules =
+      List.map (
+        fun t ->
+          let (name,_,_,_,_) = t in
+          <:str_item<
+            module $uid:("Json_utils_" ^ name)$ =
+            struct
+              value of_file file_name =
+                let json = Ext_json.from_file file_name in
+                $uid:("Json_ext_" ^ name)$.from_json json;
+
+              value to_file obj file_name =
+                let json = $uid:("Json_ext_" ^ name)$.to_json obj in
+                Ext_json.to_file json file_name;
+
+
+              value list_of_file file_name =
+                let json = Ext_json.from_file file_name in
+                  List.map (
+                    fun json ->
+                      $uid:("Json_ext_" ^ name)$.from_json json
+                  ) (Ext_json.fetch_list json);
+
+              value list_to_file obj_list file_name =
+                let json_list =
+                  List.map (
+                    fun obj ->
+                     $uid:("Json_ext_" ^ name)$.to_json obj
+                  ) obj_list
+                in
+                Ext_json.to_file (Ext_json.to_list json_list) file_name;
+            end
+          >>
+      ) decls
+    in
+
+    <:str_item<
+      $i$;
+      $list:modules$
+    >>
+
+
   let generate_sigs = Generator.generate_sigs generator
 
 end
 
 module Json_ext = Base.Register(Description)(Builder)
-
-
-module Make (Syntax : Sig.Camlp4Syntax) =
-struct
-  open Camlp4.PreCast
-  include Syntax
-
-  open Pa_deriving_common.Type
-
-  EXTEND Gram
-  str_item:
-      [
-        [ KEYWORD "type"; KEYWORD "."; json = LIDENT; tdl_raw = type_declaration ->
-          let typs_raw = Pa_deriving_common.Base.display_errors _loc Pa_deriving_common.Type.Translate.decls tdl_raw in
-          let module Help = Pa_deriving_common.Base.AstHelpers (struct let _loc = _loc end) in
-          let tdl = List.map Help.Untranslate.decl typs_raw in
-
-          if json = "json" then begin
-            let json_ext = List.map Pa_deriving_common.Base.find ["Json_ext"; "Json"] in
-
-            let modules_item =
-              List.map (
-                fun t ->
-                  let (name,_,_,_,_) = t in
-                  <:str_item<
-                    module $uid:("Json_" ^ name ^ "s")$ =
-                    struct
-                      value of_file file_name =
-                        let json = Ext_json.from_file file_name in
-                        do {
-                          $uid:("Json_ext_" ^ name)$.from_json json
-                        };
-
-                      value to_file obj file_name =
-                        let json = $uid:("Json_ext_" ^ name)$.to_json obj in
-                        do {
-                          Ext_json.to_file json file_name
-                        };
-
-
-                      value list_of_file file_name =
-                        let json = Ext_json.from_file file_name in
-                        do {
-                          List.map (
-                            fun json ->
-                              $uid:("Json_ext_" ^ name)$.from_json json
-                          ) (Ext_json.fetch_list json)
-                        };
-
-                      value list_to_file obj_list file_name =
-                        let json_list =
-                          List.map (
-                            fun obj ->
-                             $uid:("Json_ext_" ^ name)$.to_json obj
-                          ) obj_list
-                        in
-
-                        do {
-                          Ext_json.to_file (Ext_json.to_list json_list) file_name
-                        };
-                    end
-                  >>
-              ) typs_raw
-            in
-
-            Ast.stSem_of_list (
-              <:str_item< type $list:tdl$>>::
-              <:str_item< $list:List.map (Pa_deriving_common.Base.derive_str _loc typs_raw) json_ext$>> ::
-              modules_item
-            )
-          end else if json = "dom" then begin
-                let dom_ext = List.map Pa_deriving_common.Base.find ["Dom_ext"] in
-                Ast.stSem_of_list [
-                  <:str_item< type $list:tdl$>>;
-                  <:str_item< $list:List.map (Pa_deriving_common.Base.derive_str _loc typs_raw) dom_ext$>>
-                ]
-          end else
-            <:str_item< type $list:tdl$>>
-        ]
-      ];
-
-  END
-end
-
-module M = Register.OCamlSyntaxExtension(Id)(Make)
