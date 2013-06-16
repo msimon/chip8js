@@ -5,11 +5,21 @@
 }
 
 .admin {
-  &.global_container {
-    width:1000px;
+  .header {
+    a { cursor: pointer }
   }
 
-  margin-top: 10px;
+  p.error {
+    color: #BB0000;
+    margin-bottom: 10px;
+    font-size:15px;
+  }
+
+
+  .global_container {
+    width:1000px;
+    margin-top: 10px;
+  }
 
   h3 {
     font-size: 24px;
@@ -88,11 +98,6 @@
             }
 
           }
-          p.error {
-            color: #BB0000;
-            margin-bottom: 10px;
-            font-size:15px;
-          }
         }
       }
 
@@ -104,7 +109,11 @@
   }
 
   > div.not_connected {
-    width: 200px;
+    width: 220px;
     margin: 0 auto;
+
+    button {
+      float: right ;
+    }
   }
 }

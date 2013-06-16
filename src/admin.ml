@@ -86,19 +86,11 @@
         Debug.log "Error Lwt_async: %s" (Printexc.to_string exn)
     )
 
-  let rec connected_dom () =
+  let connected_dom () =
     let games_s,games_u = Dom_react.S.create [] in
     let games_u f = games_u (f (Dom_react.S.value games_s)) in
     let open_s,open_u = Dom_react.S.create (-1) in
     let register_sig = ref [] in
-
-    let sign_out () =
-      Lwt.async (
-        fun _ ->
-          %sign_out ()
-      );
-      Manip.replaceAllChild container [ not_connected_dom () ]
-    in
 
     let game_dom ~action n =
       let name,path =
@@ -279,7 +271,7 @@
       ]
     ]
 
-  and not_connected_dom () =
+  let not_connected_dom connexion_u =
     let error_dom = p ~a:[ a_class ["error"]; a_style "display:none" ] [ pcdata "password mismatch" ] in
     let admin_password = input ~input_type:`Password () in
 
@@ -289,6 +281,7 @@
           Lwt.async (
             fun _ ->
               lwt logged = %sign_in pwd in
+              connexion_u logged;
               if logged then Manip.replaceAllChild container [ connected_dom () ]
               else Manip.SetCss.display error_dom "block" ;
               Lwt.return_unit
@@ -307,17 +300,37 @@
     div ~a:[ a_class [ "not_connected" ]] [
       error_dom ;
       admin_password ;
-      button ~button_type:`Button ~a:[ a_onclick (fun _ -> sign_in (); false)] [
-        pcdata "Submit"
+      button ~button_type:`Button ~a:[ a_onclick (fun _ -> sign_in (); false); a_class ["btn"; "btn-primary"]] [
+        pcdata "Connect"
       ]
     ]
 
   let init () =
+    let connected,connexion_u = Dom_react.S.create false in
+
+    let sign_out () =
+      Lwt.async (fun _ -> %sign_out ());
+      connexion_u false ;
+      Manip.replaceAllChild container [ not_connected_dom connexion_u ]
+    in
+
     Manip.appendToBody (
-      div [
-        div ~a:[ a_class ["navbar navbar-inverse"]] [
+      div ~a:[ a_class ["admin"]] [
+        div ~a:[ a_class ["navbar"; "navbar-inverse"; "header"]] [
           div ~a:[ a_class ["navbar-inner"]] [
             Raw.a ~a:[ a_class ["brand"]] [ pcdata "Admin mod" ];
+            R.node (
+              Dom_react.S.map (
+                function
+                  | true ->
+                    ul ~a:[ a_class [ "nav "]][
+                      li [
+                        Raw.a ~a:[ a_onclick (fun _ -> sign_out (); false)] [ pcdata "Sign out" ]
+                      ]
+                    ]
+                  | false -> ul ~a:[ a_style "display:none"] []
+              ) connected
+            )
           ]
         ];
         container;
@@ -328,9 +341,11 @@
       fun _ ->
         lwt is_connected = %is_connected () in
 
+        connexion_u is_connected ;
+
         let dom =
           if is_connected then connected_dom ()
-          else not_connected_dom ()
+          else not_connected_dom connexion_u
         in
 
         Manip.replaceAllChild container [ dom ];

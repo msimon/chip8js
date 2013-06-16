@@ -63,11 +63,17 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   margin: 0 auto;
 }
 
-.admin {
-  margin-top: 10px;
+.admin .header a {
+  cursor: pointer;
 }
-.admin.global_container {
+.admin p.error {
+  color: #BB0000;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+.admin .global_container {
   width: 1000px;
+  margin-top: 10px;
 }
 .admin h3 {
   font-size: 24px;
@@ -138,16 +144,14 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   padding: 3px;
   content: "(int)";
 }
-.admin > div.connected > div.games_list ul > li > div.edit p.error {
-  color: #BB0000;
-  margin-bottom: 10px;
-  font-size: 15px;
-}
 .admin > div.connected > div.games_list > div.new_game_div {
   width: 939px;
   margin-left: 21px;
 }
 .admin > div.not_connected {
-  width: 200px;
+  width: 220px;
   margin: 0 auto;
+}
+.admin > div.not_connected button {
+  float: right;
 }
