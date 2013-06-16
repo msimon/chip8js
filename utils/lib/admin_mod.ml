@@ -47,7 +47,7 @@
       begin match error_dom with
         | Some error_dom ->
           let error = Printf.sprintf "Expected value of type %s but '%s' was given" t (match v with | Some v -> v | None -> "") in
-          Manip.SetCss.display error_dom "inline" ;
+          Manip.SetCss.display error_dom "block" ;
           Manip.replaceAllChild error_dom [ pcdata error ]
         | None -> ()
       end;
@@ -68,7 +68,7 @@
         let error = p ~a:[ a_class ["error"]; a_style "display:none"] [ ] in
         let d = input ~a:[ v ] ~input_type:`Text () in
         {
-          node = div ~a:[ a_class ["ext_dom_int"] ] [ error; d ] ;
+          node = div ~a:[ a_class ["dom_ext_int"] ] [ error; d ] ;
           value_ = `Input d;
           error = Some error;
         }
@@ -105,7 +105,7 @@
         let error = p ~a:[ a_class ["error"]; a_style "display:none"] [ ] in
         let d = input ~a:[ v ] ~input_type:`Text () in
         {
-          node = div ~a:[ a_class ["ext_dom_int"; "ext_dom_int32"] ] [ error; d ] ;
+          node = div ~a:[ a_class ["dom_ext_int"; "dom_ext_int32"] ] [ error; d ] ;
           value_ = `Input d;
           error = Some error ;
         }
@@ -141,12 +141,13 @@
         let error = p ~a:[ a_class ["error"]; a_style "display:none"] [ ] in
         let d = input ~a:[ v ] ~input_type:`Text () in
         {
-          node = div ~a:[ a_class ["ext_dom_int"; "ext_dom_int64"] ] [ error; d ] ;
+          node = div ~a:[ a_class ["dom_ext_int"; "dom_ext_int64"] ] [ error; d ] ;
           value_ = `Input d;
           error = Some error ;
         }
 
       let to_dom i =
+        Firebug.console##debug (Js.string "lol");
         to_default ~v:i ()
 
       let save d =
@@ -218,7 +219,7 @@
         let error = p ~a:[ a_class ["error"]; a_style "display:none"] [ ] in
         let d = input ~a:[ v ] ~input_type:`Text () in
         {
-          node = div ~a:[ a_class ["ext_dom_float"] ] [ error; d ] ;
+          node = div ~a:[ a_class ["dom_ext_float"] ] [ error; d ] ;
           value_ = `Input d;
           error = Some error ;
         }
@@ -254,7 +255,7 @@
         let error = p ~a:[ a_class ["error"]; a_style "display:none"] [ ] in
         let d = input ~a:[ v ] ~input_type:`Text () in
         {
-          node = div ~a:[ a_class ["ext_dom_string"] ] [ error; d ] ;
+          node = div ~a:[ a_class ["dom_ext_string"] ] [ error; d ] ;
           value_ = `Input d;
           error = Some error ;
         }
@@ -308,14 +309,14 @@
                           | _ -> assert false
                         end;
                       false
-                    )
-                  ] ~button_type:`Button [ pcdata "deleted" ]
+                    ); a_class [ "btn"; "btn-warning"]
+                  ] ~button_type:`Button [ pcdata "delete" ]
       in
       Manip.appendChild single_node btn ;
       Manip.appendChild nodes single_node ;
     in
 
-    let add_btn = button ~a:[ a_onclick (fun _ -> add_single_node (); false)] ~button_type:`Button [ pcdata "add" ] in
+    let add_btn = button ~a:[ a_onclick (fun _ -> add_single_node (); false); a_class [ "btn"; "btn-info" ]] ~button_type:`Button [ pcdata "add" ] in
     Manip.appendChild node add_btn ;
 
     v,add_single_node
@@ -344,12 +345,10 @@
           | `List l ->
             List.fold_left (
               fun acc e ->
-                try
-                  A.save e::acc
-                with _ ->
+                try (A.save e::acc)
+                with Empty_value ->
                   acc
-            ) [] l
-
+            ) [] (List.rev l)
           | _ -> raise Wrong_dom_value
     end)
 
@@ -378,13 +377,11 @@
             let l =
               List.fold_left (
                 fun acc e ->
-                  try
-                    A.save e::acc
-                  with _ ->
+                  try (A.save e::acc)
+                  with Empty_value ->
                     acc
-              ) [] l
+              ) [] (List.rev l)
             in
-
             Array.of_list l
           | _ -> raise Wrong_dom_value
 

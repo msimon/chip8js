@@ -80,7 +80,7 @@ module Builder(Loc : Defs.Loc) = struct
           value to_default ?v () =
             let dom_list = $Helpers.expr_list to_default$ in
             do {{
-              Admin_mod.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
+              Admin_mod.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$; "dom_ext_record"]] (List.map (fun (d,_) -> d) dom_list);
               Admin_mod.value_ = `Record (List.map (fun (_,v) -> v) dom_list);
               Admin_mod.error = None ;
             }};
@@ -88,7 +88,7 @@ module Builder(Loc : Defs.Loc) = struct
           value to_dom t =
             let dom_list = $Helpers.expr_list to_dom$ in
             do {{
-              Admin_mod.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
+              Admin_mod.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$; "dom_ext_record"]] (List.map (fun (d,_) -> d) dom_list);
               Admin_mod.value_ = `Record (List.map (fun (_,v) -> v) dom_list);
               Admin_mod.error = None ;
             }};
