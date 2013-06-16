@@ -139,7 +139,7 @@
                 ) gs
               in
 
-              g::gs
+              gs @ [ g ]
             );
 
             Lwt.async (
@@ -150,13 +150,21 @@
 
       let delete_btn =
         let delete_act g =
-          if Js.to_bool (Dom_html.window##confirm (Js.string (Printf.sprintf "Are you sure to delete %s ?" g.Chip8_game.name))) then
-            Lwt.async (fun _ -> %delete_game g.Chip8_game.name)
+          if Js.to_bool (Dom_html.window##confirm (Js.string (Printf.sprintf "Are you sure to delete %s ?" g.Chip8_game.name))) then begin
+            Lwt.async (fun _ -> %delete_game g.Chip8_game.name);
+            open_u (-1) ;
+            games_u (fun gs ->
+              List.filter (
+                fun g_ ->
+                  g_.Chip8_game.name <> g.Chip8_game.name
+              ) gs
+            )
+          end
         in
 
         match action with
           | `Edit g ->
-            button ~button_type:`Button ~a:[ a_onclick (fun _ -> delete_act g; false)] [ pcdata "Delete" ];
+            button ~button_type:`Button ~a:[ a_onclick (fun _ -> delete_act g; false); a_class ["btn";"btn-danger"; "button-delete"]] [ pcdata "Delete" ];
           | `Create ->
             button ~button_type:`Button ~a:[ a_style "display:none" ] [];
       in
@@ -177,19 +185,22 @@
             in
 
             if o = n then begin
-              div ~a:[ a_class ["game"]] [
-                h3 ~a:[ a_onclick (fun _ -> open_u (-1); false)] [
+              li ~a:[ a_class ["game"] ] [
+                Raw.a ~a:[ a_onclick (fun _ -> open_u (-1); false)] [
                   pcdata (if name = "" then "Create new game" else name)
                 ];
                 div ~a:[ a_class ["edit"]] [
                   Admin_mod.node g_dom ;
-                  button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game g_dom; false)] [ pcdata "Save" ];
-                  delete_btn;
+                  div ~a:[ a_class ["game_button_action"; "clearfix"]] [
+                    delete_btn;
+                    button ~button_type:`Button ~a:[ a_onclick (fun _ -> open_u (-1); false); a_class [ "btn"; "button-cancel"] ] [ pcdata "Cancel" ];
+                    button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game g_dom; false); a_class [ "btn"; "btn-success"; "button-save"]] [ pcdata "Save" ];
+                  ]
                 ]
               ]
             end else begin
-              div ~a:[ a_class ["game"]; a_onclick (fun _ ->  open_u n; false)] [
-                h3 [ pcdata (if name = "" then "Create new game" else name) ]
+              li ~a:[ a_class ["game"]; a_onclick (fun _ ->  open_u n; false)] [
+                Raw.a [ pcdata (if name = "" then "Create new game" else name) ]
               ]
             end
         ) open_s
@@ -207,14 +218,41 @@
 
             open_u (-1);
             (* regenerate the dom *)
-            let d,_ =
+            let games_1,games_2,_ =
+              List.fold_left (
+                fun (acc1,acc2,n) g ->
+                  if n mod 2 = 0 then g::acc1,acc2,(n+1)
+                  else acc1,g::acc2,(n+1)
+              ) ([],[],0) games
+            in
+
+            let d1,_ =
               List.fold_left (
                 fun (acc,n) g ->
                   (game_dom ~action:(`Edit g) n::acc,n + 1)
-              ) ([ game_dom ~action:`Create 0 ],1) games
+              ) ([],1) games_1
             in
 
-            div d
+            let d2,_ =
+              List.fold_left (
+                fun (acc,n) g ->
+                  (game_dom ~action:(`Edit g) n::acc,n + 1)
+              ) ([],((List.length games_1) + 1))  games_2
+            in
+
+            div ~a:[ a_class ["games_list"] ] [
+              div ~a:[ a_class ["clearfix"]] [
+                div ~a:[ a_class ["span6"]] [
+                  ul ~a:[ a_class ["nav"; "nav-tabs";"nav-stacked"]] d1
+                ];
+                div ~a:[ a_class ["span6"]] [
+                  ul ~a:[ a_class ["nav"; "nav-tabs";"nav-stacked"]] d2
+                ];
+              ];
+              div ~a:[ a_class ["new_game_div"]] [
+                ul ~a:[ a_class ["nav"; "nav-tabs";"nav-stacked"]] ([ game_dom ~action:`Create 0 ])
+              ]
+            ]
         ) games_s
       )
     in
@@ -227,10 +265,18 @@
         Lwt.return ()
     );
 
+    let dump_done_txt = span ~a:[a_style "display:none"] [ pcdata "done!"] in
+
     div ~a:[ a_class [ "connected" ]] [
-      h1 [ pcdata "Games configuration" ];
+      h3 [ pcdata "Games configuration" ];
       games_dom ;
-      button ~button_type:`Button ~a:[ a_onclick (fun _ -> Lwt.async (fun _ -> %dump ()); false) ] [ pcdata "DUMP!" ]
+      div ~a:[ a_class ["dump_btn_container"]] [
+        button ~button_type:`Button ~a:[
+          a_onclick (fun _ -> Lwt.async (fun _ -> lwt _ = %dump () in Manip.SetCss.display dump_done_txt "inline"; Lwt.return_unit); false);
+          a_class [ "btn"; "btn-primary"]
+        ] [ pcdata "Dump configuration to file" ];
+        dump_done_txt;
+      ]
     ]
 
   and not_connected_dom () =

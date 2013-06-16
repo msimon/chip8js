@@ -66,6 +66,87 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 .admin {
   margin-top: 10px;
 }
+.admin.global_container {
+  width: 1000px;
+}
+.admin h3 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+.admin > div.connected > div.dump_btn_container {
+  text-align: center;
+}
+.admin > div.connected > div.dump_btn_container > span {
+  margin-left: 5px;
+  font-size: 15px;
+  color: #888;
+}
+.admin > div.connected > div.games_list ul > li {
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 5px;
+}
+.admin > div.connected > div.games_list ul > li > div.edit {
+  padding: 10px 0;
+  border: 1px solid #ddd;
+  border-top: none;
+}
+.admin > div.connected > div.games_list ul > li > div.edit > div.game_button_action {
+  margin-top: 10px;
+}
+.admin > div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-cancel, .admin > div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-delete {
+  float: left;
+  margin-left: 20px;
+}
+.admin > div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-save {
+  float: right;
+  margin-right: 20px;
+}
+.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record > div:nth-child(2n) {
+  background-color: #d8dfea;
+}
+.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_list {
+  padding: 10px 0;
+}
+.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_list > div.dom_ext_list_elems > div.dom_ext_list_elem {
+  background-color: #EEE;
+  margin: 0 10px 10px;
+  padding: 5px 0;
+}
+.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_option::before {
+  color: #AAA;
+  font-size: 14px;
+  padding: 3px;
+  content: "(opt)";
+}
+.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_string::before {
+  color: #AAA;
+  font-size: 14px;
+  padding: 3px;
+  content: "(str)";
+}
+.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_float::before {
+  color: #AAA;
+  font-size: 14px;
+  padding: 3px;
+  content: "(float)";
+}
+.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_int::before {
+  color: #AAA;
+  font-size: 14px;
+  padding: 3px;
+  content: "(int)";
+}
+.admin > div.connected > div.games_list ul > li > div.edit p.error {
+  color: #BB0000;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+.admin > div.connected > div.games_list > div.new_game_div {
+  width: 939px;
+  margin-left: 21px;
+}
 .admin > div.not_connected {
   width: 200px;
   margin: 0 auto;
