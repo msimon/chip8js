@@ -7,7 +7,7 @@ lauch:
 
 sass:
 	@compass compile ./css
-	@cp ./css/css/chip8.css ./public
+	@cp -r ./css/css/ ./public
 
 
 clean:

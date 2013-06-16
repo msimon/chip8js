@@ -10,22 +10,22 @@ end
 
 module Description : Defs.ClassDescription = struct
   let classname = "Admin_mod"
-  let runtimename = "Ext_dom"
+  let runtimename = "Admin_mod"
   let default_module = None
   let alpha = None
   let allow_private = false
   let predefs = [
-    ["int"], ["Ext_dom";"int"];
-    ["int32"], ["Ext_dom";"int32"];
-    ["Int32";"t"], ["Ext_dom";"int32"];
-    ["int64"], ["Ext_dom";"int64"];
-    ["Int64";"t"], ["Ext_dom";"int64"];
-    ["bool"], ["Ext_dom";"bool"];
-    ["float"], ["Ext_dom";"float"];
-    ["string"], ["Ext_dom";"string"];
-    ["list"], ["Ext_dom";"list"];
-    ["array"],["Ext_dom";"array"];
-    ["option"], ["Ext_dom";"option"];
+    ["int"], ["Admin_mod";"int"];
+    ["int32"], ["Admin_mod";"int32"];
+    ["Int32";"t"], ["Admin_mod";"int32"];
+    ["int64"], ["Admin_mod";"int64"];
+    ["Int64";"t"], ["Admin_mod";"int64"];
+    ["bool"], ["Admin_mod";"bool"];
+    ["float"], ["Admin_mod";"float"];
+    ["string"], ["Admin_mod";"string"];
+    ["list"], ["Admin_mod";"list"];
+    ["array"],["Admin_mod";"array"];
+    ["option"], ["Admin_mod";"option"];
   ]
 
   let depends = []
@@ -61,14 +61,14 @@ module Builder(Loc : Defs.Loc) = struct
                 let v = $self#call_poly_expr ctxt ty "to_default"$ () in
                 (div [
                   span [ pcdata ($`str:name$ ^ " :")];
-                  v.Ext_dom.node ;
+                  v.Admin_mod.node ;
                 ], ($`str:name$, v))
               >>,
               <:expr<
                 let v = $self#call_poly_expr ctxt ty "to_dom"$ t.$lid:name$ in
                 (div [
                   span [ pcdata ($`str:name$ ^ " :")];
-                  v.Ext_dom.node ;
+                  v.Admin_mod.node ;
                 ], ($`str:name$, v))
               >>
           ) fields
@@ -80,17 +80,17 @@ module Builder(Loc : Defs.Loc) = struct
           value to_default ?v () =
             let dom_list = $Helpers.expr_list to_default$ in
             do {{
-              Ext_dom.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
-              Ext_dom.value_ = `Record (List.map (fun (_,v) -> v) dom_list);
-              Ext_dom.error = None ;
+              Admin_mod.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
+              Admin_mod.value_ = `Record (List.map (fun (_,v) -> v) dom_list);
+              Admin_mod.error = None ;
             }};
 
           value to_dom t =
             let dom_list = $Helpers.expr_list to_dom$ in
             do {{
-              Ext_dom.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
-              Ext_dom.value_ = `Record (List.map (fun (_,v) -> v) dom_list);
-              Ext_dom.error = None ;
+              Admin_mod.node = div ~a:[ a_class [ "dom_ext_" ^ $`str:tname$]] (List.map (fun (d,_) -> d) dom_list);
+              Admin_mod.value_ = `Record (List.map (fun (_,v) -> v) dom_list);
+              Admin_mod.error = None ;
             }};
         >>
       in
@@ -111,10 +111,10 @@ module Builder(Loc : Defs.Loc) = struct
 
         <:str_item@here<
           value save dom_ext =
-          match dom_ext.Ext_dom.value_ with
+          match dom_ext.Admin_mod.value_ with
              [ `Record value_list ->
                  $Helpers.record_expr l$
-               | _ -> raise Ext_dom.Wrong_dom_value
+               | _ -> raise Admin_mod.Wrong_dom_value
              ]
         >>
       in
@@ -150,9 +150,9 @@ module Builder(Loc : Defs.Loc) = struct
             (* $tpatt$ will be something like (id1,id2,id3...), so here id are value name of a subset of t*)
             let dom_list = $Helpers.expr_list to_default$ in
             do {{
-              Ext_dom.node = div ~a:[a_class [ "dom_ext_tuple" ]] (List.map (fun d -> d.Ext_dom.node) dom_list) ;
-              Ext_dom.value_ = `List dom_list ;
-              Ext_dom.error = None ;
+              Admin_mod.node = div ~a:[a_class [ "dom_ext_tuple" ]] (List.map (fun d -> d.Admin_mod.node) dom_list) ;
+              Admin_mod.value_ = `List dom_list ;
+              Admin_mod.error = None ;
             }};
 
           value to_dom t =
@@ -160,9 +160,9 @@ module Builder(Loc : Defs.Loc) = struct
             let $tpatt$ = t in
             let dom_list = $Helpers.expr_list to_dom$ in
             do {{
-              Ext_dom.node = div ~a:[ a_class ["dom_ext_tuple"]] (List.map (fun d -> d.Ext_dom.node) dom_list) ;
-              Ext_dom.value_ = `List dom_list ;
-              Ext_dom.error = None ;
+              Admin_mod.node = div ~a:[ a_class ["dom_ext_tuple"]] (List.map (fun d -> d.Admin_mod.node) dom_list) ;
+              Admin_mod.value_ = `List dom_list ;
+              Admin_mod.error = None ;
             }};
         >>
       in
@@ -180,10 +180,10 @@ module Builder(Loc : Defs.Loc) = struct
 
         <:str_item@here<
           value save dom_ext =
-            match dom_ext.Ext_dom.value_ with
+            match dom_ext.Admin_mod.value_ with
              [ `List $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
                  $Helpers.tuple_expr l$
-               | _ -> raise Ext_dom.Wrong_dom_value
+               | _ -> raise Admin_mod.Wrong_dom_value
              ]
         >>
       in
@@ -291,7 +291,7 @@ module Builder(Loc : Defs.Loc) = struct
        let to_dom =
     (*
        We need to create binding (and not calling the function to_dom twice, once for node, once for value_) for each tys because
-       we are saving a value of type Html5.div_content_fun in Ext_dom.value_.
+       we are saving a value of type Html5.div_content_fun in Admin_mod.value_.
        If we were directly calling the function twice, we would be unable to fetch any value, since the 'dom' display and the 'dom'
        from which we are taking the value will differ
     *)
@@ -324,7 +324,7 @@ module Builder(Loc : Defs.Loc) = struct
                      List.map (
                        fun e ->
                          let e = Lazy.force e in
-                         e.Ext_dom.node
+                         e.Admin_mod.node
                      ) (List.assoc v nodes_list)
                    in
                    Manip.replaceAllChild updatable_div l
@@ -339,12 +339,12 @@ module Builder(Loc : Defs.Loc) = struct
                $match_select$;
 
                {
-                 Ext_dom.node = div ~a:[ a_class ["dom_ext_sum"]] [
+                 Admin_mod.node = div ~a:[ a_class ["dom_ext_sum"]] [
                      (sel :> Eliom_content_core.Html5.elt Html5_types.div_content_fun);
                      updatable_div ;
                    ] ;
-                 Ext_dom.value_ = `Select (sel,$Helpers.expr_list dom_values$);
-                 Ext_dom.error = None ;
+                 Admin_mod.value_ = `Select (sel,$Helpers.expr_list dom_values$);
+                 Admin_mod.error = None ;
                }
              }
                >>
@@ -404,7 +404,7 @@ method save_of_sum : 'c. Generator.context -> ('e -> 'f -> 'c -> 'g) -> 'c list 
           match List.assoc $`str:name$ nodes with [
             $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
               $uid:name$  $Helpers.tuple_expr l$
-            | _ -> raise Ext_dom.Wrong_dom_value
+            | _ -> raise Admin_mod.Wrong_dom_value
           ]
         >>::acc
       else
@@ -413,7 +413,7 @@ method save_of_sum : 'c. Generator.context -> ('e -> 'f -> 'c -> 'g) -> 'c list 
             match List.assoc $`str:name$ nodes with [
               $Helpers.patt_list (List.map (fun x -> <:patt<$lid:x$>>) ids)$ ->
                 `$uid:name$  $Helpers.tuple_expr l$
-              | _ -> raise Ext_dom.Wrong_dom_value
+              | _ -> raise Admin_mod.Wrong_dom_value
           ]
         >>::acc
     in
@@ -422,18 +422,18 @@ method save_of_sum : 'c. Generator.context -> ('e -> 'f -> 'c -> 'g) -> 'c list 
       List.fold_left (
         fun acc t ->
           mc (no_expr acc) (with_expr acc) t
-      ) [ <:match_case@here< _ -> raise Ext_dom.Empty_value >> ] tags
+      ) [ <:match_case@here< _ -> raise Admin_mod.Empty_value >> ] tags
     in
 
     <:str_item@here<
       value save d =
-      match d.Ext_dom.value_ with
+      match d.Admin_mod.value_ with
         [
          `Select (sel, nodes) ->
             match Dom_manip.get_value_select sel with [
               $list:mcs$
             ]
-            | _ -> raise Ext_dom.Wrong_dom_value
+            | _ -> raise Admin_mod.Wrong_dom_value
         ]
      >>
   in

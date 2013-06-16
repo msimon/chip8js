@@ -16,6 +16,7 @@ let html_v =
        meta ~a:([a_property "og:title"; a_content "Chip8 Emulator written in ocaml"]) () ;
        meta ~a:([a_property "og:site_name"; a_content "www.ochip8.com"]) () ;
 
+       link ~rel:[ `Stylesheet ] ~href:(uri_of_string (fun () -> "/bootstrap.min.css")) ();
        link ~rel:[ `Stylesheet ] ~href:(uri_of_string (fun () -> "/chip8.css")) ();
      ])
     (body [])

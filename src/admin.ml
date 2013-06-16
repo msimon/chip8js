@@ -90,6 +90,7 @@
     let games_s,games_u = Dom_react.S.create [] in
     let games_u f = games_u (f (Dom_react.S.value games_s)) in
     let open_s,open_u = Dom_react.S.create (-1) in
+    let register_sig = ref [] in
 
     let sign_out () =
       Lwt.async (
@@ -106,35 +107,44 @@
           | `Edit g -> g.Chip8_game.name,g.Chip8_game.path
       in
 
-      let edit_game g_ =
-
-        let g_ = Chip8_game.Admin_mod_game.save g_ in
-
-        Debug.log "name: %s, path: %s, game_rate: %f, timer_rate: %f, game_data: %s"
-          g_.Chip8_game.name
-          g_.Chip8_game.path
-          (match g_.Chip8_game.game_rate with Some f -> f | None -> 0.)
-          (match g_.Chip8_game.timer_rate with Some f -> f | None -> 0.)
-          (match g_.Chip8_game.game_data with Some s -> s | None -> "null")
-        ;
-
+      let edit_game g =
+        let g = Chip8_game.Admin_mod_game.save g in
         match action with
-          | `Edit g when
-              g.Chip8_game.name <> g_.Chip8_game.name &&
-              List.exists (fun g -> g.Chip8_game.name = g_.Chip8_game.name) (Dom_react.S.value games_s)
-            -> (failwith "name must be unique")
           | _ ->
-            games_u (fun gs -> g_::gs);
+
+            let old_name =
+              match action with
+                | `Create -> None
+                | `Edit g_ -> Some g_.Chip8_game.name
+            in
+
+            begin match old_name with
+              | Some old_name ->
+                if g.Chip8_game.name <> old_name &&
+                   List.exists (fun g_ -> g_.Chip8_game.name = g.Chip8_game.name) (Dom_react.S.value games_s)
+                then (failwith "name must be unique")
+              | None ->
+                if List.exists (fun g_ -> g_.Chip8_game.name = g.Chip8_game.name) (Dom_react.S.value games_s)
+                then (failwith "name must be unique")
+            end;
+
+            games_u (fun gs ->
+              let gs =
+                List.filter (
+                  fun g_ ->
+                    match old_name with
+                      | Some old_name ->
+                        g_.Chip8_game.name <> old_name
+                      | None -> true
+                ) gs
+              in
+
+              g::gs
+            );
 
             Lwt.async (
               fun _ ->
-                let old_name =
-                  match action with
-                    | `Create -> None
-                    | `Edit g -> Some g.Chip8_game.name
-                in
-
-                %edit_game (old_name,g_)
+                %edit_game (old_name,g)
             )
       in
 
@@ -162,7 +172,7 @@
             in
 
             let g_dom =
-              (let module M = Ext_dom.Admin_mod_option(Chip8_game.Admin_mod_game)
+              (let module M = Admin_mod.Admin_mod_option(Chip8_game.Admin_mod_game)
                in M.to_dom) g ;
             in
 
@@ -172,7 +182,7 @@
                   pcdata (if name = "" then "Create new game" else name)
                 ];
                 div ~a:[ a_class ["edit"]] [
-                  Ext_dom.node g_dom ;
+                  Admin_mod.node g_dom ;
                   button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game g_dom; false)] [ pcdata "Save" ];
                   delete_btn;
                 ]
@@ -184,13 +194,19 @@
             end
         ) open_s
       in
+      register_sig := d :: !register_sig ;
       R.node d
     in
 
     let games_dom = R.node (
         Dom_react.S.map (
           fun games ->
+            (* clean previous signal *)
+            List.iter Dom_react.S.stop !register_sig;
+            register_sig := [];
+
             open_u (-1);
+            (* regenerate the dom *)
             let d,_ =
               List.fold_left (
                 fun (acc,n) g ->
@@ -212,10 +228,6 @@
     );
 
     div ~a:[ a_class [ "connected" ]] [
-      header [
-        h2 [ pcdata "Hello admin !"];
-        span ~a:[ a_onclick (fun _ -> sign_out (); false)] [ pcdata "Sign out"];
-      ];
       h1 [ pcdata "Games configuration" ];
       games_dom ;
       button ~button_type:`Button ~a:[ a_onclick (fun _ -> Lwt.async (fun _ -> %dump ()); false) ] [ pcdata "DUMP!" ]
@@ -255,7 +267,16 @@
     ]
 
   let init () =
-    Manip.appendToBody container;
+    Manip.appendToBody (
+      div [
+        div ~a:[ a_class ["navbar navbar-inverse"]] [
+          div ~a:[ a_class ["navbar-inner"]] [
+            Raw.a ~a:[ a_class ["brand"]] [ pcdata "Admin mod" ];
+          ]
+        ];
+        container;
+      ]
+    );
 
     Lwt.async (
       fun _ ->
