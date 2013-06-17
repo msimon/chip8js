@@ -58,11 +58,6 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   display: block;
 }
 
-.global_container {
-  width: 900px;
-  margin: 0 auto;
-}
-
 .admin .header a {
   cursor: pointer;
 }
@@ -156,9 +151,63 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   float: right;
 }
 
-div.container div.game_list {
-  width: 1000px;
+body.main {
+  padding-top: 102px;
 }
-div.container div.game_list > span {
+body.main header {
+  height: 102px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  background-color: white;
+  border-bottom: 1px solid #ebebeb;
+}
+body.main header > div {
+  width: 1170px;
+  margin: 0 auto;
+}
+body.main header > div > span.logo {
+  display: inline-block;
+  float: left;
+  background: url(img/chip8_logo.svg);
+  background-size: 180px 180px;
+  background-position: -14px -36px;
+  width: 150px;
+  height: 107px;
+}
+body.main header > div > span.logo_txt {
+  font-family: Impact,Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  display: inline-block;
+  font-size: 42pt;
+  line-height: 107px;
+  color: #333;
+  margin-left: 5px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+body.main div.container {
+  margin-top: 50px;
+  width: 1170px;
+}
+body.main div.container div.canvas_div {
+  width: 960px;
+  margin: 0 auto;
+}
+body.main div.container div.canvas_div > div > canvas {
+  -webkit-box-shadow: black 2px 2px 10px;
+  -moz-box-shadow: black 2px 2px 10px;
+  box-shadow: black 2px 2px 10px;
+}
+body.main div.container div.canvas_div > div.instruction {
+  -webkit-box-shadow: black 2px 2px 10px;
+  -moz-box-shadow: black 2px 2px 10px;
+  box-shadow: black 2px 2px 10px;
+  height: 320px;
+  margin-left: 0;
+}
+body.main div.container div.game_list {
+  width: 1170px;
+}
+body.main div.container div.game_list > span {
   float: left;
 }

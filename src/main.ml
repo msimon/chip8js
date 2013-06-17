@@ -6,7 +6,7 @@ module Chip8 =
     let application_name = "chip8"
   end)
 
-let html_v =
+let html_v cl =
   html
     (head (title (pcdata "Chip8 Emu")) [
        meta ~a:([a_charset "utf-8"; a_content "text/html"; a_http_equiv "Content-Type"]) () ;
@@ -19,7 +19,7 @@ let html_v =
        link ~rel:[ `Stylesheet ] ~href:(uri_of_string (fun () -> "/bootstrap.min.css")) ();
        link ~rel:[ `Stylesheet ] ~href:(uri_of_string (fun () -> "/chip8.css")) ();
      ])
-    (body [])
+    (body ~a:[ a_class [cl]] [])
 
 let main_handler _ _ =
   let _ : unit client_value = {{
@@ -29,7 +29,7 @@ let main_handler _ _ =
   )
   }} in
 
-  Lwt.return html_v
+  Lwt.return (html_v "main")
 
 let admin_handler _ _ =
   let _ : unit client_value = {{
@@ -39,7 +39,7 @@ let admin_handler _ _ =
   )
   }} in
 
-  Lwt.return html_v
+  Lwt.return (html_v "admin")
 
 let _ =
   Chip8.register_service ~path:[ "" ]

@@ -4,12 +4,41 @@
   open Html5
   open D
 
+  let games_div = div ~a:[ a_class ["game_list"]] []
+
+  let main_dom () =
+    div [
+      header [
+        div [
+          span ~a:[ a_class ["logo"]] [];
+          span ~a:[ a_class ["logo_txt"]] [ pcdata "OCHIP8" ];
+        ]
+      ];
+      div ~a:[ a_class [ "container"]] [
+        Debug.box_dom;
+        div ~a:[ a_class ["canvas_div"; "row"]] [
+          div ~a:[ a_class ["span9"] ] [ Display.canvas ];
+          div ~a:[ a_class ["span3"; "instruction"]] []
+        ];
+        games_div
+      ]
+    ]
+
+
+  let game_dom name g =
+    span ~a:[
+      a_style "cursor:pointer; margin:10px";
+      a_onclick (fun _ ->
+        Chip8_game.launch_game g; false)
+    ] [
+      pcdata name
+    ]
+
+
   let init () =
     Debug.init ();
     Display.init () ;
     Key.init () ;
-
-    let games_div = div ~a:[ a_class ["game_list"]] [] in
 
     Lwt.async (
       fun _ ->
@@ -26,14 +55,7 @@
 
         let games =
           Hashtbl.fold (
-            fun name g acc ->
-              (span ~a:[
-                 a_style "cursor:pointer; margin:10px";
-                 a_onclick (fun _ ->
-                   Chip8_game.launch_game g; false)
-               ] [
-                 pcdata name
-               ])::acc
+            fun name g acc -> (game_dom name g)::acc
           ) Chip8_game.games_htbl []
         in
 
@@ -41,15 +63,6 @@
         Lwt.return_unit
     );
 
-    Manip.appendToBody (
-      div ~a:[ a_class ["container"]] [
-        Debug.box_dom;
-        h1 [ pcdata "CHIP8" ];
-        div [
-          Display.canvas
-        ];
-        games_div
-      ]
-    )
+    Manip.appendToBody (main_dom ())
 
 }}
