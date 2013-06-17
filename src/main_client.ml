@@ -9,7 +9,7 @@
     Display.init () ;
     Key.init () ;
 
-    let games_div = div [] in
+    let games_div = div ~a:[ a_class ["game_list"]] [] in
 
     Lwt.async (
       fun _ ->

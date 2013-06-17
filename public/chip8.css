@@ -155,3 +155,10 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 .admin > div.not_connected button {
   float: right;
 }
+
+div.container div.game_list {
+  width: 1000px;
+}
+div.container div.game_list > span {
+  float: left;
+}

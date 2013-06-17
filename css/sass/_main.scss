@@ -1,0 +1,8 @@
+div.container {
+  div.game_list {
+    width: 1000px;
+    > span {
+      float:left
+    }
+  }
+}
