@@ -4,7 +4,7 @@
   open Html5
   open D
 
-  let games_div = div ~a:[ a_class ["game_list"]] []
+  let games_div = div ~a:[ a_class ["game_list"; "clearfix"]] []
 
   let main_dom () =
     div [
