@@ -27,7 +27,7 @@
           let key = key_of_keycode ev##keyCode in
           if not (List.mem (key, `Pressed) !stack) then
             stack := (key,`Pressed)::!stack;
-          true
+          (not (List.exists (fun (k,_) -> k = key) !Config.keys))
       )
     in
 
@@ -38,7 +38,7 @@
           let key = key_of_keycode ev##keyCode in
           if not (List.mem (key, `Released) !stack) then
             stack := (key,`Released)::!stack;
-          true
+          (not (List.exists (fun (k,_) -> k = key) !Config.keys))
       )
     in
     ()

@@ -68,78 +68,78 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 }
 .admin .global_container {
   width: 1000px;
-  margin-top: 10px;
+  margin: 10px auto 25px;
 }
 .admin h3 {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin: 25px 0 35px 0;
 }
-.admin > div.connected > div.dump_btn_container {
+.admin div.connected > div.dump_btn_container {
   text-align: center;
 }
-.admin > div.connected > div.dump_btn_container > span {
+.admin div.connected > div.dump_btn_container > span {
   margin-left: 5px;
   font-size: 15px;
   color: #888;
 }
-.admin > div.connected > div.games_list ul > li {
+.admin div.connected > div.games_list ul > li {
   text-align: center;
   cursor: pointer;
   margin-bottom: 5px;
 }
-.admin > div.connected > div.games_list ul > li > div.edit {
+.admin div.connected > div.games_list ul > li > div.edit {
   padding: 10px 0;
   border: 1px solid #ddd;
   border-top: none;
 }
-.admin > div.connected > div.games_list ul > li > div.edit > div.game_button_action {
+.admin div.connected > div.games_list ul > li > div.edit > div.game_button_action {
   margin-top: 10px;
 }
-.admin > div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-cancel, .admin > div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-delete {
+.admin div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-cancel, .admin div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-delete {
   float: left;
   margin-left: 20px;
 }
-.admin > div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-save {
+.admin div.connected > div.games_list ul > li > div.edit > div.game_button_action .button-save {
   float: right;
   margin-right: 20px;
 }
-.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record > div:nth-child(2n) {
+.admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record > div:nth-child(2n) {
   background-color: #d8dfea;
 }
-.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_list {
+.admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_list {
   padding: 10px 0;
 }
-.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_list > div.dom_ext_list_elems > div.dom_ext_list_elem {
+.admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_list > div.dom_ext_list_elems > div.dom_ext_list_elem {
   background-color: #EEE;
   margin: 0 10px 10px;
   padding: 5px 0;
 }
-.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_option::before {
+.admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_option::before {
   color: #AAA;
   font-size: 14px;
   padding: 3px;
   content: "(opt)";
 }
-.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_string::before {
+.admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_string::before {
   color: #AAA;
   font-size: 14px;
   padding: 3px;
   content: "(str)";
 }
-.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_float::before {
+.admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_float::before {
   color: #AAA;
   font-size: 14px;
   padding: 3px;
   content: "(float)";
 }
-.admin > div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_int::before {
+.admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record div.dom_ext_int::before {
   color: #AAA;
   font-size: 14px;
   padding: 3px;
   content: "(int)";
 }
-.admin > div.connected > div.games_list > div.new_game_div {
+.admin div.connected > div.games_list > div.new_game_div {
   width: 939px;
   margin-left: 21px;
 }
@@ -176,7 +176,7 @@ body.main header > div > span.logo {
   height: 107px;
 }
 body.main header > div > span.logo_txt {
-  font-family: Impact,Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
   display: inline-block;
   font-size: 42pt;
   line-height: 107px;
@@ -187,7 +187,7 @@ body.main header > div > span.logo_txt {
 }
 body.main div.container {
   margin-top: 50px;
-  width: 1170px;
+  width: 960px;
 }
 body.main div.container div.canvas_div {
   width: 960px;
@@ -207,7 +207,28 @@ body.main div.container div.canvas_div > div.instruction {
 }
 body.main div.container div.game_list {
   width: 1170px;
+  margin: 25px auto 0;
+  font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  text-align: center;
 }
-body.main div.container div.game_list > span {
-  float: left;
+body.main div.container div.game_list > div.game {
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  -ms-border-radius: 4px;
+  -o-border-radius: 4px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  padding: 5px;
+  height: 140px;
+}
+body.main div.container div.game_list > div.game:nth-child(4n + 1) {
+  margin-left: 0;
+}
+body.main div.container div.game_list > div.game:hover {
+  background-color: #EEE;
+}
+body.main div.container div.game_list > div.game img {
+  width: 215px;
+  margin-bottom: 5px;
 }

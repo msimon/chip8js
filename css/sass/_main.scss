@@ -1,5 +1,7 @@
 $header_heigth: 102px;
 $common_width: 1170px;
+$second_width: 960px;
+$font-family-title: Impact,Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
 
 body.main {
   padding-top: $header_heigth;
@@ -25,7 +27,7 @@ body.main {
       }
 
       > span.logo_txt {
-        font-family: Impact,Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+        font-family: $font-family-title ;
         display: inline-block ;
         font-size: 42pt;
         line-height: 107px;
@@ -39,7 +41,7 @@ body.main {
 
   div.container {
     margin-top: 50px;
-    width: $common_width ;
+    width: $second_width;
 
     div.canvas_div {
       width: 960px ;
@@ -60,9 +62,33 @@ body.main {
 
     div.game_list {
       width: $common_width;
-      > span {
-        float:left
+      margin: 25px auto 0;
+
+      font-family : $font-family-title ;
+      text-align: center;
+
+      > div.game {
+
+        &:nth-child(4n + 1) {
+          margin-left: 0;
+        }
+
+        &:hover {
+          background-color: #EEE;
+        }
+
+        @include border-radius(4px);
+        margin-bottom: 10px;
+        cursor: pointer ;
+        padding: 5px;
+        height: 140px;
+
+        img {
+          width: 215px;
+          margin-bottom: 5px;
+        }
       }
     }
+
   }
 }

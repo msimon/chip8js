@@ -413,7 +413,7 @@
       let save o =
         try
           Some (A.save o)
-        with _ ->
+        with Empty_value ->
           None
     end)
 

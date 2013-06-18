@@ -11,6 +11,7 @@
     timer_rate : float option ;
     game_data : string option ;
     keys : (Config.key * Config.emu_key) list ;
+    img_path: string option ;
   } deriving (Admin_mod)
 
 }}
@@ -27,6 +28,7 @@
     timer_rate : float option ;
     game_data : string option ;
     keys : (Config.key * Config.emu_key) list ;
+    img_path: string option ;
   } deriving (Json, Json_ext)
 
   let games_htbl = Hashtbl.create 20
@@ -108,7 +110,9 @@
   let get_time () =
     Js.to_float ((jsnew Js.date_now ())##getTime())
 
-  let load_game game =
+  let load_game game_name =
+    let game = Hashtbl.find games_htbl game_name in
+
     M.initialize () ;
     lwt game_str =
       match game.game_data with

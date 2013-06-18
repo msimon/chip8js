@@ -78,7 +78,7 @@
 
   module DM = Dom_manip
 
-  let container = div ~a:[ a_class ["admin"; "global_container" ]] []
+  let container = div ~a:[ a_class [ "global_container" ]] []
 
   let _ =
     Lwt.async_exception_hook := (
@@ -210,6 +210,12 @@
 
             open_u (-1);
             (* regenerate the dom *)
+            let games =
+              List.sort (
+                fun g1 g2 -> compare g1.Chip8_game.name g2.Chip8_game.name
+              ) games
+            in
+
             let games_1,games_2,_ =
               List.fold_left (
                 fun (acc1,acc2,n) g ->
@@ -315,7 +321,7 @@
     in
 
     Manip.appendToBody (
-      div ~a:[ a_class ["admin"]] [
+      div [
         div ~a:[ a_class ["navbar"; "navbar-inverse"; "header"]] [
           div ~a:[ a_class ["navbar-inner"]] [
             Raw.a ~a:[ a_class ["brand"]] [ pcdata "Admin mod" ];

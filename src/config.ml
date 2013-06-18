@@ -81,7 +81,7 @@
     `Key_v, `KF ;
   ]
 
-  let keys = ref default_keys
+  let keys : (key * emu_key) list ref = ref []
 
   let game_memory_init = 0x200
 

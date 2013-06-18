@@ -18,16 +18,16 @@
 
   .global_container {
     width:1000px;
-    margin-top: 10px;
+    margin: 10px auto 25px;
   }
 
   h3 {
     font-size: 24px;
     font-weight: bold;
-    margin-bottom: 20px;
+    margin: 25px 0 35px 0;
   }
 
-  > div.connected {
+  div.connected {
     > div.dump_btn_container {
       text-align: center ;
 

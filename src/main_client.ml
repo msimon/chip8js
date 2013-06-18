@@ -25,13 +25,21 @@
     ]
 
 
-  let game_dom name g =
-    span ~a:[
-      a_style "cursor:pointer; margin:10px";
+  let game_dom game_name =
+    let g = Hashtbl.find Chip8_game.games_htbl game_name in
+    let g_img =
+      match g.Chip8_game.img_path with
+        | Some src ->
+          img ~src ~alt:game_name ()
+        | None -> img ~a:[ a_class ["display:none"]] ~src:"" ~alt:"" ()
+    in
+    div ~a:[
+      a_class [ "game"; "span3" ];
       a_onclick (fun _ ->
-        Chip8_game.launch_game g; false)
+        Chip8_game.launch_game game_name; false)
     ] [
-      pcdata name
+      g_img ;
+      span [ pcdata game_name ]
     ]
 
 
@@ -42,24 +50,23 @@
 
     Lwt.async (
       fun _ ->
-        lwt _ =
-          if Hashtbl.length Chip8_game.games_htbl = 0 then begin
-            lwt games = %Chip8_game.available_game () in
-            List.iter (
+        lwt game_names =
+          lwt games = %Chip8_game.available_game () in
+          let g = List.map (
               fun g ->
-                Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g
-            ) games;
-            Lwt.return_unit
-          end else Lwt.return_unit
+                Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g ;
+                g.Chip8_game.name
+            ) games in
+          Lwt.return g
         in
 
-        let games =
-          Hashtbl.fold (
-            fun name g acc -> (game_dom name g)::acc
-          ) Chip8_game.games_htbl []
+        let game_names =
+          List.sort (
+            fun g1 g2 -> compare g1 g2
+          ) game_names
         in
 
-        Manip.replaceAllChild games_div games ;
+        Manip.replaceAllChild games_div (List.map game_dom game_names);
         Lwt.return_unit
     );
 
