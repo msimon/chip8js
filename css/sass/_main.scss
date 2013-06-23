@@ -2,6 +2,7 @@ $header_heigth: 102px;
 $common_width: 1170px;
 $second_width: 960px;
 $font-family-title: Impact,Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+$title_color: #333;
 
 body.main {
   padding-top: $header_heigth;
@@ -31,7 +32,7 @@ body.main {
         display: inline-block ;
         font-size: 42pt;
         line-height: 107px;
-        color: #333;
+        color: $title_color;
         margin-left: 5px;
         text-transform: uppercase;
         vertical-align: middle;
@@ -54,8 +55,27 @@ body.main {
 
         &.instruction {
           @include box-shadow(black 2px 2px 10px);
-          height: 320px;
+          height: 300px;
           margin-left: 0;
+          padding: 10px;
+          overflow: scroll;
+
+          div {
+            margin-bottom: 10px;
+
+            h3 {
+              font-family : $font-family-title ;
+              color: $title_color ;
+              margin-bottom: 5px;
+            }
+
+            p {
+              padding: 5px 0;
+              font-family: Georgia;
+              font-size: 14px;
+              text-align:justify;
+            }
+          }
         }
       }
     }
@@ -64,6 +84,7 @@ body.main {
       margin: 25px auto;
 
       font-family : $font-family-title ;
+      color: $title_color ;
       text-align: center;
 
       > div.game {

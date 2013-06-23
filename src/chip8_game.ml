@@ -12,6 +12,9 @@
     game_data : string option ;
     keys : (Config.key * Config.emu_key) list ;
     img_path: string ;
+    controls: string option ;
+    instruction: string option ;
+    information: string option ;
   } deriving (Admin_mod)
 
 }}
@@ -29,6 +32,9 @@
     game_data : string option ;
     keys : (Config.key * Config.emu_key) list ;
     img_path: string ;
+    controls: string option ;
+    instruction: string option ;
+    information: string option ;
   } deriving (Json, Json_ext)
 
   let games_htbl = Hashtbl.create 20

@@ -180,7 +180,7 @@ body.main header > div > span.logo_txt {
   display: inline-block;
   font-size: 42pt;
   line-height: 107px;
-  color: #333;
+  color: #333333;
   margin-left: 5px;
   text-transform: uppercase;
   vertical-align: middle;
@@ -202,12 +202,29 @@ body.main div.container div.canvas_div > div.instruction {
   -webkit-box-shadow: black 2px 2px 10px;
   -moz-box-shadow: black 2px 2px 10px;
   box-shadow: black 2px 2px 10px;
-  height: 320px;
+  height: 300px;
   margin-left: 0;
+  padding: 10px;
+  overflow: scroll;
+}
+body.main div.container div.canvas_div > div.instruction div {
+  margin-bottom: 10px;
+}
+body.main div.container div.canvas_div > div.instruction div h3 {
+  font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  color: #333333;
+  margin-bottom: 5px;
+}
+body.main div.container div.canvas_div > div.instruction div p {
+  padding: 5px 0;
+  font-family: Georgia;
+  font-size: 14px;
+  text-align: justify;
 }
 body.main div.container div.game_list {
   margin: 25px auto;
   font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  color: #333333;
   text-align: center;
 }
 body.main div.container div.game_list > div.game {
