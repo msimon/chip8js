@@ -25,12 +25,15 @@
     ]
 
 
-  let game_dom game_name =
+  let game_dom canvas_js game_name  =
     let g = Hashtbl.find Chip8_game.games_htbl game_name in
     div ~a:[
       a_class [ "game"; "span3" ];
       a_onclick (fun _ ->
-        Chip8_game.launch_game game_name; false)
+        canvas_js##scrollIntoView (Js._false);
+        Chip8_game.launch_game game_name;
+        false
+      )
     ] [
       img ~src:g.Chip8_game.img_path ~alt:g.Chip8_game.img_path ();
       span [ pcdata game_name ]
@@ -39,8 +42,8 @@
 
   let init () =
     Debug.init ();
-    Display.init () ;
     Key.init () ;
+    let canvas_js = Display.init () in
 
     Lwt.async (
       fun _ ->
@@ -60,7 +63,7 @@
           ) game_names
         in
 
-        Manip.replaceAllChild games_div (List.map game_dom game_names);
+        Manip.replaceAllChild games_div (List.map (game_dom canvas_js) game_names);
         Lwt.return_unit
     );
 

@@ -16,7 +16,8 @@
 
   let init () =
     let canvas_js = Eliom_content.Html5.To_dom.of_canvas canvas in
-    ctx := Some (canvas_js##getContext (_2d_))
+    ctx := Some (canvas_js##getContext (_2d_));
+    canvas_js
 
   let display () =
     let ctx =
