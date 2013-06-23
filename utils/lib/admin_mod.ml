@@ -14,6 +14,7 @@
 
   type 'a dom_value = [
     | `Input of Html5_types.input Eliom_content.Html5.D.elt
+    | `Textarea of Html5_types.textarea Eliom_content.Html5.D.elt
     | `Select of Html5_types.select Eliom_content.Html5.D.elt * ((string * ('a dom_ext Lazy.t) list) list)
     | `List of 'a dom_ext list
     | `Record of (string * 'a dom_ext) list
@@ -246,17 +247,15 @@
       let to_default ?v () =
         let v =
           match v with
-            | Some v ->
-              a_value v
-            | None ->
-              a_value ""
+            | Some v -> v
+            | None -> ""
         in
 
         let error = p ~a:[ a_class ["error"]; a_style "display:none"] [ ] in
-        let d = input ~a:[ v ] ~input_type:`Text () in
+        let d = Raw.textarea (pcdata v) in
         {
           node = div ~a:[ a_class ["dom_ext_string"] ] [ error; d ] ;
-          value_ = `Input d;
+          value_ = `Textarea d;
           error = Some error ;
         }
 
@@ -265,8 +264,8 @@
 
       let save d =
         match d.value_ with
-          | `Input s ->
-            let v = Dom_manip.get_opt_value s in
+          | `Textarea s ->
+            let v = Dom_manip.get_opt_value_textarea s in
             handle_exception d.error "string" v (
               function
                 | Some i -> i
