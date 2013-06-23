@@ -27,18 +27,12 @@
 
   let game_dom game_name =
     let g = Hashtbl.find Chip8_game.games_htbl game_name in
-    let g_img =
-      match g.Chip8_game.img_path with
-        | Some src ->
-          img ~src ~alt:game_name ()
-        | None -> img ~a:[ a_class ["display:none"]] ~src:"" ~alt:"" ()
-    in
     div ~a:[
       a_class [ "game"; "span3" ];
       a_onclick (fun _ ->
         Chip8_game.launch_game game_name; false)
     ] [
-      g_img ;
+      img ~src:g.Chip8_game.img_path ~alt:g.Chip8_game.img_path ();
       span [ pcdata game_name ]
     ]
 

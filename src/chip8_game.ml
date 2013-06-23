@@ -11,7 +11,7 @@
     timer_rate : float option ;
     game_data : string option ;
     keys : (Config.key * Config.emu_key) list ;
-    img_path: string option ;
+    img_path: string ;
   } deriving (Admin_mod)
 
 }}
@@ -28,7 +28,7 @@
     timer_rate : float option ;
     game_data : string option ;
     keys : (Config.key * Config.emu_key) list ;
-    img_path: string option ;
+    img_path: string ;
   } deriving (Json, Json_ext)
 
   let games_htbl = Hashtbl.create 20
