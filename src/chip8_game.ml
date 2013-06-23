@@ -76,7 +76,7 @@
         try
           let g = Hashtbl.find games_htbl game in
           let in_chan =
-            try open_in_bin ((Config.get "game-dir") ^ g.name)
+            try open_in_bin ((Config.get "game-dir") ^ g.path)
             with Sys_error exn ->
               raise (Game_read_error exn)
           in
