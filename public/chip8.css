@@ -143,11 +143,11 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   width: 939px;
   margin-left: 21px;
 }
-.admin > div.not_connected {
+.admin div.not_connected {
   width: 220px;
   margin: 0 auto;
 }
-.admin > div.not_connected button {
+.admin div.not_connected button {
   float: right;
 }
 
@@ -187,7 +187,7 @@ body.main header > div > span.logo_txt {
 }
 body.main div.container {
   margin-top: 50px;
-  width: 960px;
+  width: 985px;
 }
 body.main div.container div.canvas_div {
   width: 960px;
@@ -206,7 +206,6 @@ body.main div.container div.canvas_div > div.instruction {
   margin-left: 0;
 }
 body.main div.container div.game_list {
-  width: 1170px;
   margin: 25px auto;
   font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
   text-align: center;

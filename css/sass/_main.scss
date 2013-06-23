@@ -41,7 +41,7 @@ body.main {
 
   div.container {
     margin-top: 50px;
-    width: $second_width;
+    width: 985px ;
 
     div.canvas_div {
       width: 960px ;
@@ -61,7 +61,6 @@ body.main {
     }
 
     div.game_list {
-      width: $common_width;
       margin: 25px auto;
 
       font-family : $font-family-title ;
