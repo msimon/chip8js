@@ -4,6 +4,8 @@
   open Html5
   open D
 
+  module Gs = Chip8_game.Gs
+
   let games_div = div ~a:[ a_class ["game_list"; "clearfix"]] []
 
   let instruction,update_instruction = Dom_react.S.create None
@@ -92,14 +94,43 @@
     Key.init () ;
     let canvas_js = Display.init () in
 
+    (* Loading game that we have in local storage *)
+    let games = Gs.list_of_storage () in
+
+    List.iter (
+      fun (_,g) ->
+        (* we must have a try case in case the game record change *)
+        try
+          let g = Deriving_Json.from_string Json.t<Chip8_game.game> g in
+          Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g
+        with _ -> ()
+    ) games;
+
     Lwt.async (
       fun _ ->
+        (* if we have a connexion, then check if hash are equal, if not or game missing: update localstorage *)
         lwt game_names =
           lwt games = %Chip8_game.available_game () in
           let g = List.map (
               fun g ->
-                Hashtbl.add Chip8_game.games_htbl g.Chip8_game.name g ;
-                g.Chip8_game.name
+                Gs.fetch_storage_map (
+                  fun storage ->
+                    let inserted =
+                      try
+                        let lg = Deriving_Json.from_string Json.t<Chip8_game.game> (Gs.get storage g.Chip8_game.name) in
+                        lg.Chip8_game.hash = g.Chip8_game.hash
+                      with _ ->
+                        Gs.add storage g.Chip8_game.name (Deriving_Json.to_string Json.t<Chip8_game.game> g);
+                        false
+                    in
+                    if not inserted then
+                      Hashtbl.replace Chip8_game.games_htbl g.Chip8_game.name g;
+                    g.Chip8_game.name
+                ) (fun _ ->
+                  (* if no localstorage, fall back *)
+                  Hashtbl.replace Chip8_game.games_htbl g.Chip8_game.name g ;
+                  g.Chip8_game.name
+                );
             ) games in
           Lwt.return g
         in

@@ -216,7 +216,7 @@ body.main div.container div.canvas_div > div.instruction div h3 {
   margin-bottom: 5px;
 }
 body.main div.container div.canvas_div > div.instruction div p {
-  padding: 5px 0;
+  padding: 0 5px;
   font-family: Georgia;
   font-size: 14px;
   text-align: justify;

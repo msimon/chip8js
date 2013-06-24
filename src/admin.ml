@@ -42,6 +42,10 @@
       fun (old_name,g) ->
         match_lwt Eliom_reference.get session with
           | true ->
+            let g = {
+              g with Chip8_game.hash = Some (Hashtbl.hash g)
+            } in
+
             begin match old_name with
               | Some on ->
                 Hashtbl.remove Chip8_game.games_htbl on;
@@ -56,15 +60,22 @@
   let delete_game =
     server_function Json.t<string> (
       fun name ->
-        Hashtbl.remove Chip8_game.games_htbl name;
-        Lwt.return ()
+        match_lwt Eliom_reference.get session with
+          | true ->
+            Hashtbl.remove Chip8_game.games_htbl name;
+            Lwt.return_unit
+          | false -> Lwt.return_unit
     )
 
   let dump =
     server_function Json.t<unit> (
       fun () ->
-        Chip8_game.dump_into_file ();
-        Lwt.return ()
+        match_lwt Eliom_reference.get session with
+          | true ->
+            Chip8_game.dump_into_file ();
+            Lwt.return_unit
+          | false ->
+            Lwt.return_unit
     )
 
 }}

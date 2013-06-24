@@ -15,7 +15,8 @@
     controls: string option ;
     instruction: string option ;
     information: string option ;
-  } deriving (Admin_mod)
+    hash: int option ;
+  } deriving (Admin_mod, Json)
 
 }}
 
@@ -35,6 +36,7 @@
     controls: string option ;
     instruction: string option ;
     information: string option ;
+    hash: int option ;
   } deriving (Json, Json_ext)
 
   let games_htbl = Hashtbl.create 20
@@ -111,6 +113,14 @@
   module M = Mem_req
   module C = Config
 
+  module Game_storage =
+  struct
+    let t = Dom_storage.Local
+    let prefix = "game_storage"
+  end
+
+  module Gs = Dom_storage.SFactory (Game_storage)
+
   let games_htbl : (string, game) Hashtbl.t = Hashtbl.create 20
 
   let get_time () =
@@ -130,6 +140,11 @@
               game_data = Some d ;
           } in
           Hashtbl.replace games_htbl game.name game ;
+          Gs.fetch_storage_iter (
+            fun storage ->
+              Gs.replace storage game.name (Deriving_Json.to_string Json.t<game> game)
+          );
+
           Lwt.return d
     in
 

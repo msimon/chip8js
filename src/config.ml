@@ -46,7 +46,7 @@
   type emu_key = [
     | `K0 | `K1 | `K2 | `K3 | `K4 | `K5 | `K6 | `K7
     | `K8 | `K9 | `KA | `KB | `KC | `KD | `KE | `KF
-  ] deriving (Admin_mod)
+  ] deriving (Admin_mod, Json)
 
   type key = [
     | `Key_esc | `Key_space | `Key_backspace | `Key_return
@@ -55,7 +55,7 @@
     | `Key_a | `Key_b | `Key_c | `Key_d | `Key_e | `Key_f | `Key_g | `Key_h | `Key_i | `Key_j | `Key_k | `Key_l | `Key_m
     | `Key_n | `Key_o | `Key_p | `Key_q | `Key_r | `Key_s | `Key_t | `Key_u | `Key_v | `Key_w | `Key_x | `Key_y | `Key_z
     | `Other of int
-  ] deriving (Admin_mod)
+  ] deriving (Admin_mod, Json)
 
   let memory_size = 4096
 
