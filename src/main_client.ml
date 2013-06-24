@@ -109,31 +109,39 @@
     Lwt.async (
       fun _ ->
         (* if we have a connexion, then check if hash are equal, if not or game missing: update localstorage *)
-        lwt game_names =
+        lwt game_names,notload =
           lwt games = %Chip8_game.available_game () in
-          let g = List.map (
-              fun g ->
+          let g = List.fold_left (
+              fun (names,notload) (game_name,game_hash) ->
                 Gs.fetch_storage_map (
                   fun storage ->
-                    let inserted =
-                      try
-                        let lg = Deriving_Json.from_string Json.t<Chip8_game.game> (Gs.get storage g.Chip8_game.name) in
-                        lg.Chip8_game.hash = g.Chip8_game.hash
-                      with _ ->
-                        Gs.add storage g.Chip8_game.name (Deriving_Json.to_string Json.t<Chip8_game.game> g);
-                        false
-                    in
-                    if not inserted then
-                      Hashtbl.replace Chip8_game.games_htbl g.Chip8_game.name g;
-                    g.Chip8_game.name
+                    try
+                      let lg = Deriving_Json.from_string Json.t<Chip8_game.game> (Gs.get storage game_name) in
+                      let notload =
+                        if lg.Chip8_game.hash <> game_hash then game_name::notload
+                        else notload
+                      in
+                      ((game_name::names),notload)
+                    with _ ->
+                      (game_name::names, game_name::notload)
                 ) (fun _ ->
-                  (* if no localstorage, fall back *)
-                  Hashtbl.replace Chip8_game.games_htbl g.Chip8_game.name g ;
-                  g.Chip8_game.name
+                  (* if no localstorage, fallback *)
+                  (game_name::names, game_name::notload)
                 );
-            ) games in
+            ) ([],[]) games in
           Lwt.return g
         in
+
+        lwt games = %Chip8_game.load_game_info notload in
+        List.iter (
+          fun g ->
+            Debug.log "%s notloaded" g.Chip8_game.name;
+            Hashtbl.replace Chip8_game.games_htbl g.Chip8_game.name g;
+            Gs.fetch_storage_iter (
+              fun storage ->
+                Gs.add storage g.Chip8_game.name (Deriving_Json.to_string Json.t<Chip8_game.game> g)
+            );
+        ) games ;
 
         let game_names =
           List.sort (

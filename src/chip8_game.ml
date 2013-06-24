@@ -72,10 +72,21 @@
       fun _ ->
         let games =
           Hashtbl.fold (
-            fun _ g acc -> g::acc
+            fun _ g acc -> (g.name,g.hash)::acc
           ) games_htbl []
         in
         Lwt.return games
+    )
+
+  let load_game_info =
+    server_function Json.t<string list> (
+      fun l ->
+        Lwt.return (
+          List.map (
+            fun n ->
+              Hashtbl.find games_htbl n
+          ) l
+        )
     )
 
   let load_game =
