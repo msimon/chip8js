@@ -10,7 +10,14 @@
 
   let instruction,update_instruction = Dom_react.S.create None
   let online_status,update_online_status = Dom_react.S.create true
+  let server_unreachable,update_server_status = Dom_react.E.create ()
 
+  let _ =
+    Lwt.async_exception_hook := (
+      fun exn ->
+        update_server_status () ;
+        Debug.log "Error Lwt_async: %s" (Printexc.to_string exn)
+    )
 
   let main_dom () =
     let instruction_dom =
@@ -63,7 +70,7 @@
           | true ->
             span ~a:[ a_style "display:none" ] []
           | false ->
-            span ~a:[ a_class ["online_status"]] [ pcdata "offline"]
+            span ~a:[ a_class ["online_status"]] [ pcdata "offline mode"]
       ) online_status
     in
 
@@ -107,7 +114,6 @@
         Dom_events.Typ.online (
         fun _ _ ->
           update_online_status true;
-          Debug.log "online";
           true
       )
     in
@@ -117,7 +123,6 @@
         Dom_events.Typ.offline (
         fun _ _ ->
           update_online_status false;
-          Debug.log "offline";
           true
       )
     in
@@ -143,51 +148,87 @@
         with _ -> ()
     ) games;
 
-    Lwt.async (
-      fun _ ->
-        (* if we have a connexion, then check if hash are equal, if not or game missing: update localstorage *)
-        lwt game_names,notload =
-          lwt games = %Chip8_game.available_game () in
-          let g = List.fold_left (
-              fun (names,notload) (game_name,game_hash) ->
-                Gs.fetch_storage_map (
-                  fun storage ->
-                    try
-                      let lg = Deriving_Json.from_string Json.t<Chip8_game.game> (Gs.get storage game_name) in
-                      let notload =
-                        if lg.Chip8_game.hash <> game_hash then game_name::notload
-                        else notload
-                      in
-                      ((game_name::names),notload)
-                    with _ ->
-                      (game_name::names, game_name::notload)
-                ) (fun _ ->
-                  (* if no localstorage, fallback *)
-                  (game_name::names, game_name::notload)
-                );
-            ) ([],[]) games in
-          Lwt.return g
-        in
+    let fetch_online () =
+      Lwt.async (
+        fun _ ->
+          (* if we have a connexion, then check if hash are equal, if not or game missing: update localstorage *)
+          lwt game_names,notload =
+            lwt games = %Chip8_game.available_game () in
+            let g = List.fold_left (
+                fun (names,notload) (game_name,game_hash) ->
+                  Gs.fetch_storage_map (
+                    fun storage ->
+                      try
+                        let lg = Deriving_Json.from_string Json.t<Chip8_game.game> (Gs.get storage game_name) in
+                        let notload =
+                          if lg.Chip8_game.hash <> game_hash then game_name::notload
+                          else notload
+                        in
+                        ((game_name::names),notload)
+                      with _ ->
+                        (game_name::names, game_name::notload)
+                  ) (fun _ ->
+                    (* if no localstorage, fallback *)
+                    (game_name::names, game_name::notload)
+                  );
+              ) ([],[]) games in
+            Lwt.return g
+          in
 
-        lwt games = %Chip8_game.load_game_info notload in
-        List.iter (
-          fun g ->
-            Hashtbl.replace Chip8_game.games_htbl g.Chip8_game.name g;
-            Gs.fetch_storage_iter (
-              fun storage ->
-                Gs.add storage g.Chip8_game.name (Deriving_Json.to_string Json.t<Chip8_game.game> g)
-            );
-        ) games ;
+          lwt games = %Chip8_game.load_game_info notload in
+          List.iter (
+            fun g ->
+              Hashtbl.replace Chip8_game.games_htbl g.Chip8_game.name g;
+              Gs.fetch_storage_iter (
+                fun storage ->
+                  Gs.add storage g.Chip8_game.name (Deriving_Json.to_string Json.t<Chip8_game.game> g)
+              );
+          ) games ;
 
-        let game_names =
-          List.sort (
-            fun g1 g2 -> compare g1 g2
-          ) game_names
-        in
+          let game_names =
+            List.sort (
+              fun g1 g2 -> compare g1 g2
+            ) game_names
+          in
 
-        Manip.replaceAllChild games_div (List.map (game_dom canvas_js) game_names);
-        Lwt.return_unit
-    );
+          Manip.replaceAllChild games_div (List.map (game_dom canvas_js) game_names);
+          Lwt.return_unit
+      )
+    in
+
+    let fetch_offline () =
+      let game_names =
+        Hashtbl.fold (
+          fun k v acc ->
+            match v.Chip8_game.game_data with
+              | Some _ -> k::acc
+              | None -> acc
+        ) Chip8_game.games_htbl []
+      in
+
+      let game_names =
+        List.sort (
+          fun g1 g2 -> compare g1 g2
+        ) game_names
+      in
+
+      Manip.replaceAllChild games_div (List.map (game_dom canvas_js) game_names);
+    in
+
+    let _ =
+      Dom_react.E.iter (
+        fun _ ->
+          update_online_status false;
+      ) server_unreachable
+    in
+
+    let _ =
+      Dom_react.S.iter (
+        function
+          | true -> fetch_online ()
+          | false -> fetch_offline ()
+      ) online_status
+    in
 
     Manip.appendToBody (main_dom ())
 
