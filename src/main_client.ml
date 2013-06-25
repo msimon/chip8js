@@ -9,6 +9,8 @@
   let games_div = div ~a:[ a_class ["game_list"; "clearfix"]] []
 
   let instruction,update_instruction = Dom_react.S.create None
+  let online_status,update_online_status = Dom_react.S.create true
+
 
   let main_dom () =
     let instruction_dom =
@@ -55,11 +57,22 @@
       ) instruction
     in
 
+    let online_status =
+      Dom_react.S.map (
+        function
+          | true ->
+            span ~a:[ a_style "display:none" ] []
+          | false ->
+            span ~a:[ a_class ["online_status"]] [ pcdata "offline"]
+      ) online_status
+    in
+
     div [
       header [
         div [
           span ~a:[ a_class ["logo"]] [];
           span ~a:[ a_class ["logo_txt"]] [ pcdata "OCHIP8" ];
+          R.node online_status
         ]
       ];
       div ~a:[ a_class [ "container"]] [
@@ -88,11 +101,35 @@
       span [ pcdata game_name ]
     ]
 
+  let init_online_status () =
+    let _ =
+      Dom_events.listen (Obj.magic Dom_html.window)
+        Dom_events.Typ.online (
+        fun _ _ ->
+          update_online_status true;
+          Debug.log "online";
+          true
+      )
+    in
+
+    let _ =
+      Dom_events.listen (Obj.magic Dom_html.window)
+        Dom_events.Typ.offline (
+        fun _ _ ->
+          update_online_status false;
+          Debug.log "offline";
+          true
+      )
+    in
+
+    update_online_status (Js.to_bool Dom_html.window##navigator##onLine)
+
 
   let init () =
     Debug.init ();
     Key.init () ;
     let canvas_js = Display.init () in
+    init_online_status ();
 
     (* Loading game that we have in local storage *)
     let games = Gs.list_of_storage () in
@@ -135,7 +172,6 @@
         lwt games = %Chip8_game.load_game_info notload in
         List.iter (
           fun g ->
-            Debug.log "%s notloaded" g.Chip8_game.name;
             Hashtbl.replace Chip8_game.games_htbl g.Chip8_game.name g;
             Gs.fetch_storage_iter (
               fun storage ->

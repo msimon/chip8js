@@ -185,6 +185,16 @@ body.main header > div > span.logo_txt {
   text-transform: uppercase;
   vertical-align: middle;
 }
+body.main header > div > span.online_status {
+  float: right;
+  margin-top: 103px;
+  padding: 7px;
+  font-family: "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  background: #ee0030;
+  box-shadow: black 2px 2px 10px;
+  color: #EEE;
+  font-size: 14px;
+}
 body.main div.container {
   margin-top: 50px;
   width: 985px;

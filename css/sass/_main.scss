@@ -37,6 +37,17 @@ body.main {
         text-transform: uppercase;
         vertical-align: middle;
       }
+
+      > span.online_status {
+        float: right;
+        margin-top: 103px;
+        padding: 7px;
+        font-family: "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+        background: rgb(238, 0, 48);
+        box-shadow: black 2px 2px 10px;
+        color: #EEE;
+        font-size: 14px;
+      }
     }
   }
 

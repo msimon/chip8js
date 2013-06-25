@@ -1,0 +1,29 @@
+CACHE MANIFEST
+#ver: 13
+CACHE:
+
+/bootstrap.min.css
+/chip8.css
+/chip8.js
+/img/chip8_logo.svg
+/img/game_img/15PUZZLE.png
+/img/game_img/BLINKY.png
+/img/game_img/BLITZ.png
+/img/game_img/BRIX.png
+/img/game_img/CONNECT4.png
+/img/game_img/GUESS.png
+/img/game_img/HIDDEN.png
+/img/game_img/INVADERS.png
+/img/game_img/MERLIN.png
+/img/game_img/MISSILE.png
+/img/game_img/PONG.png
+/img/game_img/PONG2.png
+/img/game_img/PUZZLE.png
+/img/game_img/SYZYGY.png
+/img/game_img/TANK.png
+/img/game_img/TETRIS.png
+/img/game_img/TICTAC.png
+/img/game_img/UFO.png
+/img/game_img/VBRIX.png
+/img/game_img/VERS.png
+/img/game_img/WIPEOFF.png

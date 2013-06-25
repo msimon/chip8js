@@ -24,4 +24,12 @@
           div [ span [ pcdata s ] ]
         )
     ) s
+
+
+  let _ =
+    Lwt.async_exception_hook := (
+      fun exn ->
+        log "Error Lwt_async: %s" (Printexc.to_string exn)
+    )
+
 }}

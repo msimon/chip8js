@@ -7,8 +7,9 @@ module Chip8 =
   end)
 
 let html_v cl =
-  html
-    (head (title (pcdata "Chip8 Emu")) [
+  html ~a:[ a_manifest (uri_of_string (fun () -> "/cache.manifest")) ]
+    (head
+       (title (pcdata "Chip8 Emu")) [
        meta ~a:([a_charset "utf-8"; a_content "text/html"; a_http_equiv "Content-Type"]) () ;
        meta ~a:([a_name "Description"; a_content "Chip8 Emulator written in ocaml"]) () ;
        meta ~a:([a_property "og:type"; a_content "website"]) () ;
