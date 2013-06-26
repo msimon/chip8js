@@ -6,18 +6,9 @@
 
   module Gs = Chip8_game.Gs
 
-  let games_div = div ~a:[ a_class ["game_list"; "clearfix"]] []
-
   let instruction,update_instruction = Dom_react.S.create None
-  let online_status,update_online_status = Dom_react.S.create true
-  let server_unreachable,update_server_status = Dom_react.E.create ()
 
-  let _ =
-    Lwt.async_exception_hook := (
-      fun exn ->
-        update_server_status () ;
-        Debug.log "Error Lwt_async: %s" (Printexc.to_string exn)
-    )
+  let games_div = div ~a:[ a_class ["game_list"; "clearfix"]] []
 
   let main_dom () =
     let instruction_dom =
@@ -71,7 +62,7 @@
             span ~a:[ a_style "display:none" ] []
           | false ->
             span ~a:[ a_class ["online_status"]] [ pcdata "offline mode"]
-      ) online_status
+      ) Offline.online_status
     in
 
     div [
@@ -108,33 +99,11 @@
       span [ pcdata game_name ]
     ]
 
-  let init_online_status () =
-    let _ =
-      Dom_events.listen (Obj.magic Dom_html.window)
-        Dom_events.Typ.online (
-        fun _ _ ->
-          update_online_status true;
-          true
-      )
-    in
-
-    let _ =
-      Dom_events.listen (Obj.magic Dom_html.window)
-        Dom_events.Typ.offline (
-        fun _ _ ->
-          update_online_status false;
-          true
-      )
-    in
-
-    update_online_status (Js.to_bool Dom_html.window##navigator##onLine)
-
-
   let init () =
+    Offline.init ();
     Debug.init ();
     Key.init () ;
     let canvas_js = Display.init () in
-    init_online_status ();
 
     (* Loading game that we have in local storage *)
     let games = Gs.list_of_storage () in
@@ -212,14 +181,7 @@
         ) game_names
       in
 
-      Manip.replaceAllChild games_div (List.map (game_dom canvas_js) game_names);
-    in
-
-    let _ =
-      Dom_react.E.iter (
-        fun _ ->
-          update_online_status false;
-      ) server_unreachable
+      Manip.replaceAllChild games_div (List.map (game_dom canvas_js) game_names)
     in
 
     let _ =
@@ -227,7 +189,7 @@
         function
           | true -> fetch_online ()
           | false -> fetch_offline ()
-      ) online_status
+      ) Offline.online_status
     in
 
     Manip.appendToBody (main_dom ())

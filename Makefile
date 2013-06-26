@@ -8,7 +8,7 @@ all: script
 script:
 	@Make -C script
 
-launch:
+launch: script
 	ocsigenserver -c chip8.conf
 
 sass:
