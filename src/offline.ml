@@ -17,15 +17,14 @@
     )
 
   let init () =
-    let _ =
-      Dom_events.listen (Dom_html.window##applicationCache)
-        Dom_events.Typ.updateready (
-        fun _ _ ->
-          Dom_html.window##applicationCache##swapCache ();
-          Dom_html.window##location##reload () ;
-          true
-      )
-    in
+    if Js.Optdef.test ((Js.Unsafe.coerce Dom_html.window)##applicationCache) then
+      ignore(Dom_events.listen (Dom_html.window##applicationCache)
+          Dom_events.Typ.updateready (
+          fun _ _ ->
+            Dom_html.window##applicationCache##swapCache ();
+            Dom_html.window##location##reload () ;
+            true
+        ))
 
     let _ =
       Dom_events.listen Dom_html.window

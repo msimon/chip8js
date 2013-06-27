@@ -1,4 +1,4 @@
-<src/server/*.{ml,mli}> or <utils/lib/server/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.server,lwt.syntax,aws,deriving-ocsigen,deriving-ocsigen.syntax,yojson)
+<src/server/*.{ml,mli}> or <utils/lib/server/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.server,lwt.syntax,deriving-ocsigen,deriving-ocsigen.syntax,yojson)
 <src/client/*.{ml,mli}> or <utils/lib/client/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.client,eliom.syntax.client,lwt.syntax)
 <src/server/*.{ml,mli}>: with_lib_syntax,with_lib_utils_server
 <src/client/*.{ml,mli}>: with_lib_syntax,with_lib_utils_client
