@@ -1,1 +1,47 @@
-@import "compass/css3"
+@import "compass/css3";
+
+@mixin before_dom_ext_input {
+  color: #AAA;
+  font-size:14px;
+  padding: 3px;
+}
+
+@mixin game_record {
+  div.dom_ext_record {
+    text-align: center;
+
+    > div:nth-child(2n) {
+      background-color: #D8DFEA
+    }
+
+    div.dom_ext_list {
+      padding: 10px 0 ;
+      > div.dom_ext_list_elems > div.dom_ext_list_elem {
+        background-color: #EEE;
+        margin: 0 10px 10px;
+        padding: 5px 0;
+      }
+    }
+
+
+    div.dom_ext_option::before {
+      @include before_dom_ext_input;
+      content:"(opt)"
+    }
+
+    div.dom_ext_string::before {
+      @include before_dom_ext_input;
+      content:"(str)";
+    }
+
+    div.dom_ext_float::before {
+      @include before_dom_ext_input;
+      content:"(float)"
+    }
+
+    div.dom_ext_int::before {
+      @include before_dom_ext_input;
+      content:"(int)"
+    }
+  }
+}

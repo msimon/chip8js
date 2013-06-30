@@ -10,7 +10,7 @@
 
   let games_div = div ~a:[ a_class ["game_list"; "clearfix"]] []
 
-  let main_dom () =
+  let main_dom header_link =
     let instruction_dom =
       Dom_react.S.map (
         function
@@ -55,24 +55,8 @@
       ) instruction
     in
 
-    let online_status =
-      Dom_react.S.map (
-        function
-          | true ->
-            span ~a:[ a_style "display:none" ] []
-          | false ->
-            span ~a:[ a_class ["online_status"]] [ pcdata "offline mode"]
-      ) Offline.online_status
-    in
-
     div [
-      header [
-        div [
-          span ~a:[ a_class ["logo"]] [];
-          span ~a:[ a_class ["logo_txt"]] [ pcdata "OCHIP8" ];
-          R.node online_status
-        ]
-      ];
+      Header.dom header_link;
       div ~a:[ a_class [ "container"]] [
         Debug.box_dom;
         div ~a:[ a_class ["canvas_div"; "row"]] [
@@ -99,7 +83,7 @@
       span [ pcdata game_name ]
     ]
 
-  let init () =
+  let init header_link =
     Offline.init ();
     Debug.init ();
     Key.init () ;
@@ -192,6 +176,6 @@
       ) Offline.online_status
     in
 
-    Manip.appendToBody (main_dom ())
+    Manip.appendToBody (main_dom header_link)
 
 }}

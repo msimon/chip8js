@@ -17,25 +17,40 @@ body.main {
     > div {
       width: $common_width ;
       margin: 0 auto ;
-      > span.logo {
-        display: inline-block ;
-        float: left ;
-        background: url(img/chip8_logo.svg);
-        background-size: 180px 180px;
-        background-position: -14px -36px;
-        width: 150px;
-        height: 107px;
+      > div.logo_side {
+        float: left;
+
+        > span.logo {
+          display: inline-block ;
+          float: left ;
+          background: url(img/chip8_logo.svg);
+          background-size: 180px 180px;
+          background-position: -14px -36px;
+          width: 150px;
+          height: 107px;
+        }
+
+        > span.logo_txt {
+          font-family: $font-family-title ;
+          display: inline-block ;
+          font-size: 42pt;
+          line-height: 107px;
+          color: $title_color;
+          margin-left: 5px;
+          text-transform: uppercase;
+          vertical-align: middle;
+        }
       }
 
-      > span.logo_txt {
-        font-family: $font-family-title ;
-        display: inline-block ;
-        font-size: 42pt;
+      > div.link_side {
+        float: right;
         line-height: 107px;
-        color: $title_color;
-        margin-left: 5px;
-        text-transform: uppercase;
-        vertical-align: middle;
+        height: 107px;
+        font-size: 18px;
+        a {
+          font-family: $font-family-title ;
+          color: $title_color;
+        }
       }
 
       > span.online_status {
@@ -48,12 +63,81 @@ body.main {
         color: #EEE;
         font-size: 14px;
       }
+      a.github_fork {
+        position: absolute;
+        right: 0;
+        top: 103px;
+      }
     }
   }
 
   div.container {
     margin-top: 50px;
     width: 985px ;
+
+    &.about {
+      margin-top: 10px;
+      margin-bottom: 50px;
+
+      div.thats_all_folks {
+        h2 {
+          font-family: "ThatFontFolks", $font-family-title;
+        }
+      }
+
+      h2 {
+        font-family: $font-family-title;
+        color: $title_color;
+        font-size: 25px;
+        margin: 20px 0 10px;
+      }
+
+      h4 {
+        font-family: $font-family-title;
+        color: $title_color ;
+        font-size: 19px;
+        margin: 10px 0px 10px 20px;
+      }
+
+      div > div {
+        > p {
+          font-family: "Arial", "Liberation Sans", sans-serif;
+          font-size: 15px;
+
+          text-indent: 10px;
+          margin-left: 20px;
+          margin-bottom: 5px;
+        }
+
+        div.dom_type_example {
+          > pre, > div {
+            float: left;
+          }
+
+          pre {
+            &:first-child {
+              margin-right: 100px;
+            }
+            padding: 10px 0 10px 10px;
+            margin-left: 20px ;
+            width: 400px;
+          }
+
+          > div:last-child {
+            pre {
+              margin: 10px 0;
+            }
+
+            div.dom_ext_game {
+              border: 1px solid #EEE;
+              margin-top: 10px;
+            }
+
+            @include game_record;
+          }
+        }
+      }
+    }
 
     div.canvas_div {
       width: 960px ;

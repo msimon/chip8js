@@ -1,9 +1,8 @@
 .PHONY: script all launch sass clean
 
-all: script
+all:
 	@ocamlbuild chip8.otarget
 	@cp _build/chip8.js public
-	@script/generate_manifest.native public/cache.manifest
 
 script:
 	@Make -C script

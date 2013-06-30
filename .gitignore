@@ -18,3 +18,5 @@ TODO
 chip8.conf
 ocsigen_file
 css/.sass-cache
+*.old
+#*#

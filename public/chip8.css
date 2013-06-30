@@ -104,6 +104,9 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
   float: right;
   margin-right: 20px;
 }
+.admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record {
+  text-align: center;
+}
 .admin div.connected > div.games_list ul > li > div.edit div.dom_ext_record > div:nth-child(2n) {
   background-color: #d8dfea;
 }
@@ -166,7 +169,10 @@ body.main header > div {
   width: 1170px;
   margin: 0 auto;
 }
-body.main header > div > span.logo {
+body.main header > div > div.logo_side {
+  float: left;
+}
+body.main header > div > div.logo_side > span.logo {
   display: inline-block;
   float: left;
   background: url(img/chip8_logo.svg);
@@ -175,7 +181,7 @@ body.main header > div > span.logo {
   width: 150px;
   height: 107px;
 }
-body.main header > div > span.logo_txt {
+body.main header > div > div.logo_side > span.logo_txt {
   font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
   display: inline-block;
   font-size: 42pt;
@@ -184,6 +190,16 @@ body.main header > div > span.logo_txt {
   margin-left: 5px;
   text-transform: uppercase;
   vertical-align: middle;
+}
+body.main header > div > div.link_side {
+  float: right;
+  line-height: 107px;
+  height: 107px;
+  font-size: 18px;
+}
+body.main header > div > div.link_side a {
+  font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  color: #333333;
 }
 body.main header > div > span.online_status {
   float: right;
@@ -195,9 +211,96 @@ body.main header > div > span.online_status {
   color: #EEE;
   font-size: 14px;
 }
+body.main header > div a.github_fork {
+  position: absolute;
+  right: 0;
+  top: 103px;
+}
 body.main div.container {
   margin-top: 50px;
   width: 985px;
+}
+body.main div.container.about {
+  margin-top: 10px;
+  margin-bottom: 50px;
+}
+body.main div.container.about div.thats_all_folks h2 {
+  font-family: "ThatFontFolks", Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+}
+body.main div.container.about h2 {
+  font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  color: #333333;
+  font-size: 25px;
+  margin: 20px 0 10px;
+}
+body.main div.container.about h4 {
+  font-family: Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans serif;
+  color: #333333;
+  font-size: 19px;
+  margin: 10px 0px 10px 20px;
+}
+body.main div.container.about div > div > p {
+  font-family: "Arial", "Liberation Sans", sans-serif;
+  font-size: 15px;
+  text-indent: 10px;
+  margin-left: 20px;
+  margin-bottom: 5px;
+}
+body.main div.container.about div > div div.dom_type_example > pre, body.main div.container.about div > div div.dom_type_example > div {
+  float: left;
+}
+body.main div.container.about div > div div.dom_type_example pre {
+  padding: 10px 0 10px 10px;
+  margin-left: 20px;
+  width: 400px;
+}
+body.main div.container.about div > div div.dom_type_example pre:first-child {
+  margin-right: 100px;
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child pre {
+  margin: 10px 0;
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_game {
+  border: 1px solid #EEE;
+  margin-top: 10px;
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_record {
+  text-align: center;
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_record > div:nth-child(2n) {
+  background-color: #d8dfea;
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_record div.dom_ext_list {
+  padding: 10px 0;
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_record div.dom_ext_list > div.dom_ext_list_elems > div.dom_ext_list_elem {
+  background-color: #EEE;
+  margin: 0 10px 10px;
+  padding: 5px 0;
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_record div.dom_ext_option::before {
+  color: #AAA;
+  font-size: 14px;
+  padding: 3px;
+  content: "(opt)";
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_record div.dom_ext_string::before {
+  color: #AAA;
+  font-size: 14px;
+  padding: 3px;
+  content: "(str)";
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_record div.dom_ext_float::before {
+  color: #AAA;
+  font-size: 14px;
+  padding: 3px;
+  content: "(float)";
+}
+body.main div.container.about div > div div.dom_type_example > div:last-child div.dom_ext_record div.dom_ext_int::before {
+  color: #AAA;
+  font-size: 14px;
+  padding: 3px;
+  content: "(int)";
 }
 body.main div.container div.canvas_div {
   width: 960px;
@@ -257,4 +360,11 @@ body.main div.container div.game_list > div.game:hover {
 body.main div.container div.game_list > div.game img {
   width: 215px;
   margin-bottom: 5px;
+}
+
+@font-face {
+  font-family: 'ThatFontFolks';
+  src: url("/fonts/ThatFontFolks.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
 }

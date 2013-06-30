@@ -26,11 +26,11 @@ let main_handler _ _ =
   let _ : unit client_value = {{
   Eliom_client.onload (
     fun _ ->
-      Main_client.init ()
+      Main_client.init ("about", %Service.about)
   )
-  }} in
+}} in
 
-  Lwt.return (html_v "main")
+Lwt.return (html_v "main")
 
 let admin_handler _ _ =
   let _ : unit client_value = {{
@@ -38,16 +38,21 @@ let admin_handler _ _ =
     fun _ ->
       Admin.init ()
   )
-  }} in
+}} in
 
-  Lwt.return (html_v "admin")
+Lwt.return (html_v "admin")
+
+let about_handler _ _ =
+  let _ : unit client_value = {{
+  Eliom_client.onload (
+    fun _ ->
+      About.init ("home", %Service.main)
+  )
+}} in
+
+Lwt.return (html_v "main")
 
 let _ =
-  Chip8.register_service ~path:[ "" ]
-    ~get_params:Eliom_parameter.unit
-    main_handler
-
-let _ =
-  Chip8.register_service ~path:[ "admin" ]
-    ~get_params:Eliom_parameter.unit
-    admin_handler
+  Chip8.register Service.main main_handler;
+  Chip8.register Service.admin admin_handler;
+  Chip8.register Service.about about_handler
