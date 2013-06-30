@@ -152,7 +152,8 @@ let _ =
     ~deps:["%_client.cmo";"public/js_dummy.js"]
     ~prod:"%.js"
     (fun env _ ->
-	    Cmd (S [Sh"js_of_eliom"; T (tags_of_pathname (env "%.js")); P (env"%_client.cmo"); A"-jsopt";P"public/js_dummy.js"; A"-o"; P(env"%.js")])
+      let tags=tags_of_pathname (env "%.js") ++"ocaml"++"compile"++"js" in
+	    Cmd (S [Sh"js_of_eliom"; T tags; P (env"%_client.cmo"); A"-jsopt";P"public/js_dummy.js"; A"-o"; P(env"%.js")])
     )
 
 (* client/server compilation*)
@@ -235,7 +236,7 @@ let _ =
 
       flag [ "ocaml"; "infer_interface"; "thread" ] (S [ A "-thread" ]);
 
-      flag [ "js_compile"; "use_lib_utils_client"] (S [ A "-I"; P "utils/lib/client"; P "utils/utils_lib_client.cma"]);
+      flag [ "js_compile"; "use_lib_utils_client"] (S [ S [ A "-I"; P "utils/lib/client"; P "utils/utils_lib_client.cma"; ]; S [ A "-package" ; A "dom_type.client"]] );
 
       ()
 

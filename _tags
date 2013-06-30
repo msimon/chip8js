@@ -1,9 +1,9 @@
-<src/server/*.{ml,mli}> or <utils/lib/server/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.server,lwt.syntax,deriving-ocsigen,deriving-ocsigen.syntax,yojson)
-<src/client/*.{ml,mli}> or <utils/lib/client/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.client,eliom.syntax.client,lwt.syntax)
+<src/server/*.{ml,mli}> or <utils/lib/server/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.server,lwt.syntax,deriving-ocsigen,deriving-ocsigen.syntax,yojson,dom_type.server.syntax)
+<src/client/*.{ml,mli}> or <utils/lib/client/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.client,eliom.syntax.client,lwt.syntax,dom_type.client,dom_type.client.syntax)
 <src/server/*.{ml,mli}>: with_lib_syntax,with_lib_utils_server
 <src/client/*.{ml,mli}>: with_lib_syntax,with_lib_utils_client
 
-<src/type_mli/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.type,lwt.syntax,yojson),with_lib_syntax,with_lib_utils_server
+<src/type_mli/*.{ml,mli}>: thread, syntax(camlp4o), package(eliom.server,eliom.syntax.type,lwt.syntax,yojson,dom_type.server.syntax),with_lib_syntax,with_lib_utils_server
 
 <utils/syntax/*.{ml,mli}>:syntax(camlp4o),package(camlp4.quotations.r,camlp4.metagenerator,camlp4.extend,deriving-ocsigen,js_of_ocaml.deriving.syntax)
 <chip8_server.cma>: link,use_lib_utils

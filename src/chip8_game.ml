@@ -16,7 +16,7 @@
     instruction: string option ;
     information: string option ;
     hash: int option ;
-  } deriving (Admin_mod, Json)
+  } deriving (Dom_type, Json)
 
 }}
 
@@ -37,7 +37,7 @@
     instruction: string option ;
     information: string option ;
     hash: int option ;
-  } deriving (Json, Json_ext)
+  } deriving (Json, Json_ext, Dom_type)
 
   let games_htbl = Hashtbl.create 20
 

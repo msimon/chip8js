@@ -105,7 +105,7 @@
       in
 
       let edit_game g =
-        let g = Chip8_game.Admin_mod_game.save g in
+        let g = Chip8_game.Dom_type_game.save g in
         match action with
           | _ ->
 
@@ -177,7 +177,7 @@
             in
 
             let g_dom =
-              (let module M = Admin_mod.Admin_mod_option(Chip8_game.Admin_mod_game)
+              (let module M = Dom_type.Dom_type_option(Chip8_game.Dom_type_game)
                in M.to_dom) g ;
             in
 
@@ -187,7 +187,7 @@
                   pcdata (if name = "" then "Create new game" else name)
                 ];
                 div ~a:[ a_class ["edit"]] [
-                  Admin_mod.node g_dom ;
+                  Dom_type.node g_dom ;
                   div ~a:[ a_class ["game_button_action"; "clearfix"]] [
                     delete_btn;
                     button ~button_type:`Button ~a:[ a_onclick (fun _ -> open_u (-1); false); a_class [ "btn"; "button-cancel"] ] [ pcdata "Cancel" ];
