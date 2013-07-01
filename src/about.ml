@@ -93,8 +93,9 @@ Dom_type.node game_dom
           ]
         ];
         p [
-          pcdata "For more information about dom_type, follow the ";
+          span [ pcdata "For more information about dom_type, follow this " ] ;
           Raw.a ~a:[ a_href "no_link_yet"; a_target "_blank" ] [ pcdata "link" ];
+          span [ pcdata "." ]
         ]
       ]
     in
@@ -110,11 +111,11 @@ Dom_type.node game_dom
           Raw.a ~a:[ a_href "https://developer.mozilla.org/en-US/docs/Online_and_offline_events"; a_target "_blank" ] [
             pcdata "offline"
           ];
-          span [ pcdata " mode are use" ]
+          span [ pcdata " mode are use." ]
         ];
         p [
           pcdata "Each time a game is play, it is download from the server and save thanks to local storage. Later if your connection is lost
-the offline mode will let you play any game previously played"
+the offline mode will let you play any game previously played."
         ];
       ]
     in
@@ -123,12 +124,12 @@ the offline mode will let you play any game previously played"
       h2 [ pcdata "So what is Ochip8 ?" ];
       div [
         p [
-          pcdata "Ochip8 is a full-javascript chip8 emulator, in other words it mimic the internal design and functionality of a chip8 interpretor"
+          pcdata "Ochip8 is a full-javascript chip8 emulator, in other words it mimic the internal design and functionality of a chip8 interpretor."
         ];
         p [
           span [ pcdata "The 'O' stand for ocaml, which is the only language use to implement this project. Thanks to " ];
           Raw.a ~a:[ a_href "http://ocsigen.org/js_of_ocaml/"; a_target "_blank"] [ pcdata "js_of_ocaml" ];
-          span [ pcdata " the ocaml code is compile to javascript for all the client-side application" ];
+          span [ pcdata " the ocaml code is compile to javascript for all the client-side application." ];
         ];
         p [
           span [
@@ -144,7 +145,7 @@ the offline mode will let you play any game previously played"
           ];
           Raw.a ~a:[ a_href "http://www.irill.org/"; a_target "_blank" ] [ pcdata "irill"];
           span [
-            pcdata ", a center for research and innovation, located in france)"
+            pcdata ", a center for research and innovation, located in france)."
           ]
         ];
         p [
@@ -152,10 +153,10 @@ the offline mode will let you play any game previously played"
           Raw.a ~a:[ a_href "no_link_yet"; a_target "_blank" ] [ pcdata "dom_type"];
           span [ pcdata ", a "];
           Raw.a ~a:[ a_href "https://code.google.com/p/deriving/"; a_target "_blank" ] [ pcdata "deriving" ];
-          span [ pcdata " syntax extension that automaticaly generate complex ocaml type in html, and vice versa" ]
+          span [ pcdata " syntax extension that automaticaly generate complex ocaml type in html, and vice versa." ]
         ];
         p [
-          span [ pcdata "It is use in the backend to easily modify game configuration" ]
+          span [ pcdata "It is use in the backend to easily modify game configuration." ]
         ];
 
         dom_type_example ();
@@ -171,7 +172,7 @@ the offline mode will let you play any game previously played"
       div [
         p [
           pcdata "Hope you'll enjoy this project and that it will be fun and usefull for some of you.
-It's quite small, it can be a great start to understand how ocaml can be use to unify server and client application
+It's quite small, it can be a great start to understand how ocaml can be use to unify server and client application.
 "
         ];
         p [
