@@ -102,6 +102,7 @@ Dom_type.node game_dom
 
     let offline () =
       div [
+        h4 [ pcdata "Offline mode" ];
         p [
           span [ pcdata "On the html5 side, "];
           Raw.a ~a:[ a_href "https://developer.mozilla.org/en-US/docs/Web/Guide/DOM/Storage"; a_target "_blank" ] [
@@ -153,15 +154,13 @@ the offline mode will let you play any game previously played."
           Raw.a ~a:[ a_href "no_link_yet"; a_target "_blank" ] [ pcdata "dom_type"];
           span [ pcdata ", a "];
           Raw.a ~a:[ a_href "https://code.google.com/p/deriving/"; a_target "_blank" ] [ pcdata "deriving" ];
-          span [ pcdata " syntax extension that automaticaly generate complex ocaml type in html, and vice versa." ]
+          span [ pcdata " syntax extension that automaticaly generate the html for complex ocaml type, and vice versa." ]
         ];
         p [
           span [ pcdata "It is use in the backend to easily modify game configuration." ]
         ];
 
         dom_type_example ();
-
-        h4 [ pcdata "Offline mode" ];
         offline ();
       ];
     ]
@@ -176,7 +175,6 @@ It's quite small, it can be a great start to understand how ocaml can be use to 
 "
         ];
         p [
-          (*@marcsimon42*)
           span [ pcdata "You can reach me on twiter " ];
           Raw.a ~a:[ a_href "https://twitter.com/marcsimon42"; a_target "_blank"] [ pcdata "@marcsimon42" ];
           span [ pcdata " for any question or issues." ]

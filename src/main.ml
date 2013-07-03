@@ -6,6 +6,8 @@ module Chip8 =
     let application_name = "chip8"
   end)
 
+let site_prefix = ""
+
 let html_v cl =
   html ~a:[ a_manifest (uri_of_string (fun () -> "/cache.manifest")) ]
     (head
@@ -17,8 +19,8 @@ let html_v cl =
        meta ~a:([a_property "og:title"; a_content "Chip8 Emulator written in ocaml"]) () ;
        meta ~a:([a_property "og:site_name"; a_content "www.ochip8.com"]) () ;
 
-       link ~rel:[ `Stylesheet ] ~href:(uri_of_string (fun () -> "/bootstrap.min.css")) ();
-       link ~rel:[ `Stylesheet ] ~href:(uri_of_string (fun () -> "/chip8.css")) ();
+       link ~rel:[ `Stylesheet ] ~href:(uri_of_string (fun () -> site_prefix ^ "/bootstrap.min.css")) ();
+       link ~rel:[ `Stylesheet ] ~href:(uri_of_string (fun () -> site_prefix ^ "/chip8.css")) ();
      ])
     (body ~a:[ a_class [cl]] [])
 
