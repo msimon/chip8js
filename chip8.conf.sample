@@ -29,6 +29,8 @@
       <static dir="./public" />
       <eliom module="_build/chip8_server.cma">
         <admin-password>password</admin-password>
+        <games-conf-file>games.conf</games-conf-file>
+        <game-dir>public/games/</game-dir>
       </eliom>
      </site>
 
