@@ -8,7 +8,7 @@ manifest:
 	@./script/generate_manifest.native public/cache.manifest
 
 script:
-	@Make -C script
+	@make -C script
 
 launch: script manifest
 	ocsigenserver -c chip8.conf
