@@ -314,7 +314,7 @@ module Builder(Loc : Defs.Loc) = struct
              let $Ast.biAnd_of_list binds$ in
              let nodes_list = $Helpers.expr_list dom_values$ in
 
-             let rec sel = lazy (Raw.select ~a:[ a_onchange (fun _ -> do { on_change (); True})  ] $Helpers.expr_list (List.rev options)$)
+             let rec sel = lazy (Raw.select $Helpers.expr_list (List.rev options)$)
              and on_change () =
                  let sel = Lazy.force sel in
                  let v = Dom_manip.get_value_select sel in

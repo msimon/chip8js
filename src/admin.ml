@@ -161,7 +161,7 @@
 
         match action with
           | `Edit g ->
-            button ~button_type:`Button ~a:[ a_onclick (fun _ -> delete_act g; false); a_class ["btn";"btn-danger"; "button-delete"]] [ pcdata "Delete" ];
+            button ~button_type:`Button ~a:[ a_onclick (fun _ -> delete_act g; raise Eliom_lib.False); a_class ["btn";"btn-danger"; "button-delete"]] [ pcdata "Delete" ];
           | `Create ->
             button ~button_type:`Button ~a:[ a_style "display:none" ] [];
       in
@@ -183,20 +183,20 @@
 
             if o = n then begin
               li ~a:[ a_class ["game"] ] [
-                Raw.a ~a:[ a_onclick (fun _ -> open_u (-1); false)] [
+                Raw.a ~a:[ a_onclick (fun _ -> open_u (-1); raise Eliom_lib.False)] [
                   pcdata (if name = "" then "Create new game" else name)
                 ];
                 div ~a:[ a_class ["edit"]] [
                   Dom_type.node g_dom ;
                   div ~a:[ a_class ["game_button_action"; "clearfix"]] [
                     delete_btn;
-                    button ~button_type:`Button ~a:[ a_onclick (fun _ -> open_u (-1); false); a_class [ "btn"; "button-cancel"] ] [ pcdata "Cancel" ];
-                    button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game g_dom; false); a_class [ "btn"; "btn-success"; "button-save"]] [ pcdata "Save" ];
+                    button ~button_type:`Button ~a:[ a_onclick (fun _ -> open_u (-1); raise Eliom_lib.False); a_class [ "btn"; "button-cancel"] ] [ pcdata "Cancel" ];
+                    button ~button_type:`Button ~a:[ a_onclick (fun _ -> edit_game g_dom; raise Eliom_lib.False); a_class [ "btn"; "btn-success"; "button-save"]] [ pcdata "Save" ];
                   ]
                 ]
               ]
             end else begin
-              li ~a:[ a_class ["game"]; a_onclick (fun _ ->  open_u n; false)] [
+              li ~a:[ a_class ["game"]; a_onclick (fun _ ->  open_u n; raise Eliom_lib.False)] [
                 Raw.a [ pcdata (if name = "" then "Create new game" else name) ]
               ]
             end
@@ -275,7 +275,7 @@
       games_dom ;
       div ~a:[ a_class ["dump_btn_container"]] [
         button ~button_type:`Button ~a:[
-          a_onclick (fun _ -> Lwt.async (fun _ -> lwt _ = %dump () in Manip.SetCss.display dump_done_txt "inline"; Lwt.return_unit); false);
+          a_onclick (fun _ -> Lwt.async (fun _ -> lwt _ = %dump () in Manip.SetCss.display dump_done_txt "inline"; Lwt.return_unit); raise Eliom_lib.False);
           a_class [ "btn"; "btn-primary"]
         ] [ pcdata "Dump configuration to file" ];
         dump_done_txt;
@@ -311,7 +311,7 @@
     div ~a:[ a_class [ "not_connected" ]] [
       error_dom ;
       admin_password ;
-      button ~button_type:`Button ~a:[ a_onclick (fun _ -> sign_in (); false); a_class ["btn"; "btn-primary"]] [
+      button ~button_type:`Button ~a:[ a_onclick (fun _ -> sign_in (); raise Eliom_lib.False); a_class ["btn"; "btn-primary"]] [
         pcdata "Connect"
       ]
     ]
@@ -336,7 +336,7 @@
                   | true ->
                     ul ~a:[ a_class [ "nav "]][
                       li [
-                        Raw.a ~a:[ a_onclick (fun _ -> sign_out (); false)] [ pcdata "Sign out" ]
+                        Raw.a ~a:[ a_onclick (fun _ -> sign_out (); raise Eliom_lib.False)] [ pcdata "Sign out" ]
                       ]
                     ]
                   | false -> ul ~a:[ a_style "display:none"] []

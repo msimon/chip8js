@@ -301,21 +301,21 @@
       let single_node = div ~a:[ a_class ["dom_ext_list_elem"]] [ d.node ] in
       let btn =
         button ~a:[ a_onclick (fun _ ->
-                      Manip.removeChild nodes single_node;
-                      v.value_ <-
-                        begin match v.value_ with
-                          | `List l -> `List (List.filter (fun d2 -> d <> d2) l)
-                          | _ -> assert false
-                        end;
-                      false
-                    ); a_class [ "btn"; "btn-warning"]
-                  ] ~button_type:`Button [ pcdata "delete" ]
+            Manip.removeChild nodes single_node;
+            v.value_ <-
+              begin match v.value_ with
+                | `List l -> `List (List.filter (fun d2 -> d <> d2) l)
+                | _ -> assert false
+              end;
+            raise Eliom_lib.False
+          ); a_class [ "btn"; "btn-warning"]
+          ] ~button_type:`Button [ pcdata "delete" ]
       in
       Manip.appendChild single_node btn ;
       Manip.appendChild nodes single_node ;
     in
 
-    let add_btn = button ~a:[ a_onclick (fun _ -> add_single_node (); false); a_class [ "btn"; "btn-info" ]] ~button_type:`Button [ pcdata "add" ] in
+    let add_btn = button ~a:[ a_onclick (fun _ -> add_single_node (); raise Eliom_lib.False); a_class [ "btn"; "btn-info" ]] ~button_type:`Button [ pcdata "add" ] in
     Manip.appendChild node add_btn ;
 
     v,add_single_node

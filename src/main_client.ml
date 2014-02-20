@@ -76,7 +76,7 @@
         update_instruction (Some g);
         canvas_js##scrollIntoView (Js._false);
         Chip8_game.launch_game game_name;
-        false
+        raise Eliom_lib.False
       )
     ] [
       img ~src:g.Chip8_game.img_path ~alt:g.Chip8_game.img_path ();
